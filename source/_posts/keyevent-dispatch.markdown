@@ -5,11 +5,11 @@ tags:
  - Android源码解析 事件分发
 ---
 
+本文总结一下Android中按键事件的分发机制。按键事件分发跟触摸事件分发类似，比触摸事件分发更加简单。
 
+<!-- more -->
 
-本文总结一下Android中按键事件的分发机制。按键事件分发跟触摸事件分发类似，甚至比触摸事件分发更加简单！Android触摸事件分发的具体流程可以看我的这篇文章 -> [Android触摸事件分发机制](http://www.monkeyliu.com/blog/2016/06/17/touchevent/)
-
-### 1.事件分发的根源
+## 事件分发的根源
 
 首先，回顾一下触摸事件分发的大致流程:
 
@@ -26,8 +26,6 @@ public boolean dispatchTouchEvent(MotionEvent ev){
   return consume;
 }
 ```
-
-<!-- more -->
 
 那么最开始的`dispatchTouchEvent`是哪里调用的，事件的根源是从哪里传上来的？
 
@@ -181,7 +179,7 @@ private int processKeyEvent(QueuedInputEvent q) {
 
 下面就分两块来详解这两个过程中的具体细节。
 
-### 2.按键事件分发的流程
+## 按键事件分发的流程
 
 上面的第一步调用了`mView.dispatchKeyEvent(event)`来开始事件分发，其中mView是整个View树的最根布局，也就是DecorView。所以进入DecorView的源码看一下：
 
@@ -253,13 +251,12 @@ public boolean superDispatchKeyEvent(KeyEvent event) {
 
 ```java
 public boolean superDispatchKeyEvent(KeyEvent event) {
-     //...省略无关代码
+     //省略.
      return super.dispatchKeyEvent(event);
 }
 ```
 
 接下来调用super.dispatchKeyEvent进入ViewGroup中，开始真正的事件分发了！
-
 
 
 首先看一下按键事件分发的大致流程，非常简单：
@@ -376,8 +373,7 @@ public boolean onKeyUp(int keyCode, KeyEvent event) {
 可以看出View会默认消费**确认键**，其他类型的按键一律不消费。
 
 
-
-####总结：
+**总结**
 
 默认情况下，KeyEvent事件从DecorView一层层传递到focused view。对于确认键，则触发click，消费掉，结束。对于其他按键不处理，最终返回false，进行下一步的处理。
 
@@ -387,7 +383,7 @@ public boolean onKeyUp(int keyCode, KeyEvent event) {
 
 对于没有消费的事件，来看一下是如何进行下一步处理的！
 
-### 3.焦点自动处理流程
+## 焦点自动处理流程
 
 再贴一遍ViewPostImeInputStage的按键处理逻辑：
 
@@ -826,7 +822,7 @@ boolean isBetterCandidate(int direction, Rect source, Rect rect1, Rect rect2) {
 
 
 
-### 相关资料
+## 相关资料
 
 [Android触摸事件分发机制](http://gityuan.com/2015/09/19/android-touch/)
 

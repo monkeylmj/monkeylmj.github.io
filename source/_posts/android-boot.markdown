@@ -7,19 +7,13 @@ tags:
 
 
 
-最近在了解OTA升级方面的东西，学习的过程中，对Android的启动流程产生了很大的兴趣，很好奇为什么调用了`RecoverySystem#installPackage`方法之后手机重启就自动进入升级界面开始升级？Android整个系统的启动流程到底是怎样的（之前只是有过简单的了解）。加上之前对bootloader、recovery等概念比较模糊，刷机的时候一般也都是按照网上的方法做，很不程序员，于是打算把这些东西梳理一下。
-
-
-
-本篇文章主要是探索Android手机启动的流程，包括正常的模式（按下电源键到系统正常启动的整个流程）和一些其他的模式（比如进入recovery升级、线刷等）。掌握之后刷机就不用再去各种找教程，直接拿到刷机包一顿操作就行。
+最近在了解OTA升级方面的东西，学习的过程中，对Android的启动流程产生了很大的兴趣，很好奇为什么调用了**RecoverySystem#installPackage**方法之后手机重启就自动进入升级界面开始升级？Android整个系统的启动流程到底是怎样的。加上之前对bootloader、recovery等概念比较模糊,于是打算把这些东西梳理一下。
 
 <!-- more -->
 
+## Android手机正常启动流程
 
-
-### Android手机正常启动流程
-
-首先需要梳理一下Android手机正常启动的整个流程是怎样的，也就是当我们按下电源键一直到看到Launcher中间经历了什么！整个过程会从简表述，抛开其中很多不重要的细节，从比较高的层次以容易懂的语言来看这个过程。
+首先需要梳理一下Android手机正常启动的整个流程是怎样的，也就是当我们按下电源键一直到看到Launcher中间经历了什么！整个过程会从简表述，抛开其中很多不重要的细节。
 
 首先，操作系统的启动是一个比较矛盾的过程：必须先运行程序，然后计算机才能启动，但是计算机不启动就无法运行程序！ 早期采取的措施就是：将一小段程序固化在ROM中，计算机启动时，先去将它读入到内存中执行，进而将整个操作系统运行起来。在Windows上这段程序称之为BIOS（基本输入输出系统），对应的在Android中我们称之为BootLoader。
 
@@ -39,7 +33,7 @@ tags:
 
 
 
-### Recovery模式（卡刷）
+## Recovery模式（卡刷）
 
 刷过机的同学可能都知道Recovery这个东西，一般是通过长按组合键（不同手机不同组合键）进入Recovery然后安装升级包之类的。那Recovery到底是个什么东东呢，怎么进入到Recovery模式中的。
 
@@ -95,7 +89,7 @@ struct bootloader_message{
 
 
 
-### Recovery服务的细节
+## Recovery服务的细节
 
 上面介绍了进入Recovery的大概流程，提到了一个Recovery的服务，Recovery能提供的功能基本都在这个服务中定义，可以从源码的注释中可以详细了解到Recovery提供的全部服务：
 
@@ -205,7 +199,7 @@ Recovery服务的具体流程可以看下面这张图：
 
 
 
-### FastBoot模式（线刷）
+## FastBoot模式（线刷）
 
 Android启动除了正常模式和Recovery模式之外还有一个模式：FastBoot模式。
 
@@ -215,7 +209,7 @@ Recovery模式下的刷机通常称之为”卡刷“，因为升级包必须放
 
 
 
-```powershell
+```shell
 fastboot devices
 fastboot flash bootloader u-boot.bin
 fastboot flash kernel uImage
@@ -231,7 +225,7 @@ fastboot reboot
 
 
 
-**至此，Android的启动流程大概讲完了，最后稍稍总结一下：**
+## 总结一下
 
 1、Android启动有三种情况：正常启动、进入Recovery模式、进入FastBoot模式。
 
@@ -241,7 +235,7 @@ fastboot reboot
 
 
 
-### 参考资料
+## 参考资料
 
 * http://www.cnblogs.com/bluestorm/p/3340894.html
 * https://juejin.im/entry/57664abedf0eea0062f4dea8

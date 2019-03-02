@@ -5,15 +5,15 @@ tags:
  - UI
 ---
 
-UI开发中有时会遇到这样的效果（重点看对号√的动画实现）
-
-![path tracing](https://ws2.sinaimg.cn/large/006tKfTcgy1g0o7yykaxcg30a00a0tei.gif)
-
-这篇文章就总结下，如何实现这样的一个UI动效。
+总结一下工作中遇到的一个“UI路径动画”的实现。效果如下图（对号的动画）
 
 <!-- more -->
 
-### 基本分析
+![path tracing](https://ws2.sinaimg.cn/large/006tKfTcgy1g0o7yykaxcg30a00a0tei.gif)
+
+
+
+## 基本分析
 
 我们都知道，使用Android的Path Api可以很容易地画出一个对号（或者任意其他的不规则图形），实现这个效果的难点在于怎么以动画的形式逐渐地把这个路径给绘制出来。这里把路径(Path)从0到1绘制出来的过程称之为路径追踪（Path Tracing).
 
@@ -31,7 +31,7 @@ cavas.drawPath(path, paint);
 
 
 
-### 实现方案一（PathMeasure)
+## 实现方案一（PathMeasure)
 
 Android提供了PathMeasure类，用来进行路径的计算，可以用来实现路径追踪。
 
@@ -119,7 +119,7 @@ public class RouteTraceView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         mDstPath.reset();
-        mDstPath.lineTo(0, 0); //这样据说是因为硬件加速的bug，但是我去掉也没发现什么问题
+        mDstPath.lineTo(0, 0);
         mPathMeasure.getSegment(0, mEndDistance, mDstPath, false);
         canvas.drawPath(mDstPath, mPaint);
     }
@@ -157,7 +157,7 @@ public class RouteTraceView extends View {
 
 是不是很简单，对于任意一个Path，都能通过这种改变终点距离的方式，一点点地追踪出来~
 
-### 实现方案二（DashPathEffect）
+## 实现方案二（DashPathEffect）
 
 这种方式比较黑科技，算是奇技淫巧，用起来也是十分方便。
 
@@ -171,7 +171,7 @@ mPaint.setPathEffect(PathEffect effect);
 
 
 
-#####PathEffect的实现类有以下几个：
+### PathEffect的实现类有以下几个：
 
 * CornerPathEffect
 
@@ -202,9 +202,9 @@ mPaint.setPathEffect(PathEffect effect);
 
 那这些PathEffect跟要实现的路径追踪有半毛钱关系吗？？？
 
-Too young too simple！看我是怎么用DashPathEffect来装逼的！
+too young too simple！看我是怎么用DashPathEffect来装逼的！
 
-#####先来具体看一下DashPathEffect的构造方法：
+### 看一下DashPathEffect的构造方法：
 
 [@DashPathEffect构造方法]
 
@@ -227,7 +227,7 @@ PathEffect pathEffect = new DashPathEffect(new float[]{20, 10, 5, 10}, 0);
 
 
 
-**黑科技马上要来了！**
+### 黑科技马上要来了！
 
 思考下面这种写法：
 
@@ -247,9 +247,7 @@ mPaint.setPathEffect(dashPathEffect);
 canvas.drawPath(path, mPaint);
 ```
 
-其中intervals数组画线的长度和空白的长度都是path的长度。
-
-按照前面讲的，这样整个路径画出来，先是实线部分，就把路径填满了，这个路径一下子全画了出来。
+其中intervals数组画线的长度和空白的长度都是path的长度。按照前面讲的，这样整个路径画出来，先是实线部分，就把路径填满了，这个路径一下子全画了出来。
 
 稍微修改一下，将phase改为pathLength：
 
@@ -260,13 +258,9 @@ DashPathEffect dashPathEffect = new DashPathEffect(new float[]{pathLength, pathL
 
 按照前面讲的，虚线整体向起点移动pathLength个像素，这样实线部分完全移出了路径，隐藏起来了，显示的完全是空白的部分（长度也是pathLength）。
 
-**So**
+到这里，完全隐藏和完全显示两个状态都有了，剩下的中间状态，通过一个属性动画将phase从pathLength变到0，整个路径就慢慢地显示出来了！！!
 
-完全隐藏和完全显示两个状态都有了，剩下的中间状态，通过一个属性动画将phase从pathLength变到0，整个路径就慢慢地显示出来了！！!
-
-至此，便利用PathEffect的虚线效果结合phase的偏移，将路径追踪效果轻松实现了~
-
-### 参考资料
+## 参考资料
 
 * http://www.curious-creature.com/2013/12/21/android-recipe-4-path-tracing/
 * https://www.jianshu.com/p/81150d4740a4

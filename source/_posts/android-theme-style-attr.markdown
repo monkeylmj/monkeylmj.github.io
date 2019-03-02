@@ -11,9 +11,10 @@ Android UI开发中经常会涉及到Theme、Style、Attr等概念，熟悉掌�
 
 <!-- more -->
 
-### 概念
+## 概念
+### Attr
 
-* **Attr** 属性——基础单元，在Theme/Style/XML文件中作为Key使用，指定相应的value。
+基础单元，在Theme/Style/XML文件中作为Key使用，指定相应的value。
 
 定义方式：
 
@@ -56,7 +57,9 @@ int[] attrs = R.styleable.MyButton;
 
 
 
-* **Style** 样式集合，将多个属性放在一起，达到复用的目的。
+###Style
+
+样式集合，将多个属性放在一起，达到复用的目的。
 
 例如：
 
@@ -90,7 +93,9 @@ int[] attrs = R.styleable.MyButton;
         style="@style/myButtonStyle" />
 ```
 
-* **Theme** 主题，相当于一个大的Style，作用在应用的层次。其中会包含一些Window相关的属性，比如:
+### Theme
+主题，相当于一个大的Style，作用在应用的层次。其中会包含一些Window相关的属性，比如:
+
 ```xml
 <item name="windowBackground">?attr/colorBackground</item>
 <item name="windowClipToOutline">true</item>
@@ -119,7 +124,7 @@ int[] attrs = R.styleable.MyButton;
 主题相当于应用的一套皮肤，这套皮肤制定了各个组件的显示风格，使之具有统一性。我们熟知的有`Theme.Holo`,`Theme.Material`等等。
 
 
-### Style、Theme作用在View上的流程
+## Style、Theme作用在View上的流程
 
 **问题：**既然使用Style、Theme都可以给View一个样式，那么他们是怎样作用在View上的呢？他们两个的优先级又是怎么样的。
 
@@ -278,7 +283,7 @@ public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr,
 
 
 
-### 另外
+## 应用
 
 经过上面的分析，已经可以知道Theme是怎样应用默认样式到View上的了，因此我们就可以修改这种默认样式来定制我们自己的主题。比如我们想让默认的Button控件字体为30sp。
 
@@ -298,7 +303,7 @@ public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr,
 
 
 
-### 再另外
+## 另外
 
 前面提到**Theme**中会有一些Window的样式，我们可以复写来实现一些window的效果.比如
 
@@ -314,7 +319,7 @@ public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr,
 
 
 
-### 相关资料
+## 相关资料
 
 * Android源码分析
 * [Android沉浸状态栏的实现](http://www.jianshu.com/p/d147608dc27b)

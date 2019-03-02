@@ -7,11 +7,11 @@ tags:
 
 
 
-本文总结一下Android消息机制Handler的一些内部实现原理。Handler在我们Android开发中经常用来切换UI线程和Worker线程，详细了解其内部的实现原理之后，会更加明白其实现的机制，更加灵活地使用。
+本文总结一下Android消息机制Handler的一些内部实现原理。Handler在我们Android开发中经常用来切换UI线程和Worker线程，详细了解其实现原理之后，更加灵活地使用。
 
 <!-- more -->
 
-### 为什么需要切换UI/Worker线程?
+## 为什么需要切换UI/Worker线程?
 
 Android规定所有的UI操作必须在主线程中完成，又建议不要在主线程中进行耗时的操作，否则就会产生ANR异常。所以，我们在进行一些耗时操作时，必须开一个子线程进行此类操作，如果需要在子线程中访问UI资源，那么就需要切换到主线程进行UI操作。
 
@@ -34,7 +34,7 @@ void checkThread() {
 
 
 
-### Handler消息机制模型
+## Handler消息机制模型
 
 ![](https://i.loli.net/2018/08/05/5b65d1cc0d057.png)
 
@@ -56,7 +56,7 @@ void checkThread() {
 
 
 
-### Handler消息机制源码分析
+## Handler消息机制源码分析
 
 以上介绍了Handler机制的几个重要组成部分，究竟它们是怎么组合在一起，完成Android中重要的消息机制的呢，我们通过源码来进行分析，这一部分代码非常清晰！
 
@@ -251,7 +251,7 @@ public static void main(String[] args) {
 
 
 
-### 总结
+## 总结
 
 整个Handle消息机制就是这样，逻辑上非常清晰，以后写Handler的时候，脑子就更加清晰，它们的整个流程关系是怎样了，说不定还可以解决一些模糊的问题，知其然所以然了~
 
@@ -273,8 +273,8 @@ new Thread(){
 
 
 
-### 参考
+## 参考
 
 《Android开发艺术探索》一书
 
-  Android源码
+Android源码

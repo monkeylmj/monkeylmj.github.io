@@ -5,7 +5,9 @@ tags:
  - NFC
 ---
 
+总结一下Android中NFC开发相关的知识点。
 
+<!-- more -->
 
 ## NFC的几个概念
 
@@ -19,8 +21,6 @@ tags:
 
 * **NFC**（Near Field Communication） 短距离无线通讯技术，基于RFID，一般在10cm之内使用13.56MHz频率通讯
 
-<!-- more -->
-
 ---
 
 
@@ -28,7 +28,7 @@ tags:
 
 ## Android如何使用NFC
 
-###权限声明
+### 权限声明
 
 在AndroidManifest.xml中如下申请NFC权限:
 
@@ -52,12 +52,12 @@ if(NfcAdapter.getDefaultAdapter() == null){
 
 
 
-### Android设备支持三种模式的NFC操作
+### NFC的三种模式
 1. **Reader/writer mode** 通过Android设备对NFC标签进行读写数据操作。
 2. **P2P mode** NFC设备之间交换数据，AndroidBeam使用这种模式。
 3. **Card emulation mode** NFC设备模拟成NFC标签。
 
-### Reader/write mode
+## Reader/write mode
 
 Android通过标签分发系统分析发现的NFC标签，封装成对应的Intent发给Android上层进行对应的处理。
 
@@ -65,7 +65,7 @@ Android中关于NFC有三种类型的Action（优先级由高到低）：
 
 `ACTION_NDEF_DISCOVERED` `ACTION_TECH_DISCOVERED` `ACTION_TAG_DISCOVERED` 
 
-#### 这里的*优先级*可以通过标签分发系统的机制来解释:
+这里的*优先级*可以通过标签分发系统的机制来解释:
 
 1. 如果一个包含**NDEF**格式数据的NFC标签被发现，Android优先发送带`ACTION_NDEF_DISCOVERED`action的Intent。
 2. 如果没有Activity处理`ACTION_NDEF_DISCOVERED`类型的intent *或者* NFC标签不包含**NDEF**格式的数据（使用了其他已知技术）*或者* **NDEF**格式的标签不能被标签分发系统映射成正确的Intent，则会发送优先级较低的`ACTION_TECH_DISCOVERED`intent来尝试启动Activity（不会发送`ACTION_NDEF_DISCOVERED`）。
@@ -79,10 +79,7 @@ Android中关于NFC有三种类型的Action（优先级由高到低）：
 ![](https://i.loli.net/2019/03/02/5c7a184962704.png)
 
 
-
-
-
-#### NFC数据格式
+### NFC数据格式
 
 NFC的数据格式可以分为NDEF和非NDEF两种。**NDEF**是NFC Forum定义的一种标准格式，在Android中得到最大范围的支持，是Android最推荐使用的格式。
 
@@ -379,7 +376,7 @@ Android设备可选支持的Technology：
 
 
 
-### P2P mode
+## P2P mode
 
 即AndroidBeam功能，使两台Android设备进行快速的数据交换。发送数据的设备打开发送数据的应用（相当于一张标签），接受数据的设备解锁靠近发送数据的设备之后，发送数据的设备UI显示“Touch to Beam",点击即可将数据发送给接收端（接收端设备接受到数据通过标签分发系统决定打开的应用进行处理）。
 
@@ -446,7 +443,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-###  Card emulation mode
+##  Card emulation mode
 
 Android4.4之前通过在Android设备中内置一个芯片来实现。通信路径如下图：
 
@@ -510,7 +507,7 @@ public class MyHostApduService extends HostApduService {
 
 
 
-#### 相关资料
+## 相关资料
 
 1.NDEF数据解析实例：[http](http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&type=note)[://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&type=note#](http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&type=note)[/](http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&type=note)
 
