@@ -2,12 +2,12 @@
 title: "线程池的使用总结"
 date: 2016-03-07 20:08:50 +0800
 tags:
- - 线程
+ - 多线程
 ---
 
-本博文是对Java线程池使用的一篇总结，系统记录下线程池的用法：
+本篇是对Java线程池使用的总结，系统记录下线程池的用法：
 
-## 为什么使用线程池，线程池的好处是什么？
+## 为什么使用线程池？
 
 1. 相比于每次都创建新的Thread，通过重用线程池中的线程，减少了创建线程和销毁线程带来的性能开销。
 
@@ -17,9 +17,9 @@ tags:
 
 ## Java线程池模型的UML类图
 
-![](/images/articles/threadpool.png)
+![](https://i.loli.net/2018/08/04/5b65c33dcf4aa.png)
 
-其中 **ThreadPoolExecutor** 是线程池的真正实现，从其构造方法中可以看出其创建的细节和需要配置的参数
+其中 **ThreadPoolExecutor** 是线程池的真正实现，从构造方法中可以看出其创建的细节和需要配置的参数
 
 ``` java
 
@@ -49,25 +49,25 @@ public ThreadPoolExecutor(int corePoolSize,
 
 - **RejectedExecutionHandler**: 拒绝策略。当线程池中的线程达到最大线程数并且缓存任务队列已满，会调用此对象来进行处理。
 
-RejectedExecutionHandler是一个接口，
+  RejectedExecutionHandler是一个接口，
 
-```java
-public interface RejectedExecutionHandler {
-    void rejectedExecution(Runnable r, ThreadPoolExecutor executor);
-}
-```
+  ```java
+  public interface RejectedExecutionHandler {
+      void rejectedExecution(Runnable r, ThreadPoolExecutor executor);
+  }
+  ```
 
-有四个实现类，对应4种处理策略，从源码中可以看出他们的作用：
+  有四个实现类，对应4种处理策略，从源码中可以看出他们的作用：
 
-**AbortPolicy** 丢弃当前添加的任务并且抛出RejectedExecutionException异常
+  **AbortPolicy** 丢弃当前添加的任务并且抛出RejectedExecutionException异常
 
-**DiscardPolicy** 丢弃当前添加的任务，但是不抛出异常
+  **DiscardPolicy** 丢弃当前添加的任务，但是不抛出异常
 
-**DiscardOldestPolicy** 丢弃最老的任务，也就是任务队列队首的任务，然后再尝试执行当前添加的任务
+  **DiscardOldestPolicy** 丢弃最老的任务，也就是任务队列队首的任务，然后再尝试执行当前添加的任务
 
-**CallerRunsPolicy** 由调用线程处理该任务
+  **CallerRunsPolicy** 由调用线程处理该任务
 
-## 线程池的执行策略：
+## 线程池的执行策略
 
 1. 如果线程池中的线程数量<核心线程数量，直接创建一个核心线程执行该任务。
 
@@ -86,11 +86,14 @@ public interface RejectedExecutionHandler {
 - 处理任务的优先级： 核心线程池 > 缓存任务队列 > 非核心线程池
 
 
-## 常用的4种线程池模型：
+## 常用的4种线程池模型
 
 **Executors** 提供了几个静态工厂方法来创建几种不同特性的线程池，本质上就是通过配置ThreadPoolExecutor构造方法的参数组合，实现具有不同特性的ThreadPool。
 
-#### 1、FixedThreadPool - 固定线程数量的线程池
+#### 1、FixedThreadPool 
+
+固定线程数量的线程池
+
 ```java
 
 public static ExecutorService newFixedThreadPool(int nThreads) {
@@ -128,8 +131,9 @@ public LinkedBlockingQueue() {
 
 最后，使用弱引用的方式持有外部对象也是一个保险的做法。
 
+#### 2、CachedThreadPool 
 
-#### 2、CachedThreadPool - 线程数量不定的线程池
+线程数量不定的线程池
 
 ```java
 public static ExecutorService newCachedThreadPool() {
@@ -145,7 +149,9 @@ public static ExecutorService newCachedThreadPool() {
 
 从此线程池的特性看来，这类线程池比较适合执行大量的耗时较少的任务。一方面，线程的并发数量是无限的。另一方面，60s的超时时长保证闲置的线程销毁，最终整个线程池不包含任何线程，不占用系统宝贵资源。
 
-#### 3、SingleThreadExecutor - 只有一个核心线程的线程池
+#### 3、SingleThreadExecutor
+
+ 只有一个核心线程的线程池
 
 ```java
 public static ExecutorService newSingleThreadExecutor() {
@@ -157,7 +163,9 @@ public static ExecutorService newSingleThreadExecutor() {
 ```
 跟FixedThreadPool类似，只是**nThreads**固定为1，算是它的一个特例。确保了所有任务都在同一个线程按顺序同步执行，这里不再多述。
 
-#### 4、ScheduledThreadPool - 进行定时以及周期性任务执行的线程池
+#### 4、ScheduledThreadPool 
+
+进行定时以及周期性任务执行的线程池
 
 ```java
 public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
