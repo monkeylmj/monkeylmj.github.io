@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561128577746">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561128884571">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
@@ -36,7 +36,7 @@
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://monkeylmj.github.io/">
-        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561128577746" class="site-logo">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561128884571" class="site-logo">
         <h1 class="site-title">猴子公园</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -118,24 +118,22 @@
 </ul>
 <h3 id="11-oom是什么">1.1 OOM是什么?</h3>
 <p>Android中定义了一个进程的内存上限，超过之后便会OOM崩溃。</p>
-<p>上限值可通过系统属性查看：</p>
-<p><img src="https://i.loli.net/2019/03/08/5c821d02c5790.png" alt=""></p>
+<p>上限值可通过系统属性查看：
+<img src="https://i.loli.net/2019/03/08/5c821d02c5790.png" alt=""></p>
 <p>第一个属性为一个标准应用能申请的最大内存。</p>
 <p>第二个属性为应用添加<strong>largeHeap=true</strong>之后能够申请的最大内存。</p>
 <h3 id="12-lowmemorykiller机制">1.2 LowMemoryKiller机制</h3>
-<h4 id="进程优先级">进程优先级</h4>
 <p>当系统空间不足时，会按照进程的优先级对进程进行回收来腾出更多的空间给有需要的进程使用。</p>
 <p>Android中进程按优先级大概分为几个类型，优先级从高到底依次为：</p>
 <p><img src="https://i.loli.net/2019/03/08/5c821da6d4587.png" alt=""></p>
-<p><strong>前台进程</strong>：正在与用户交互，Activity Service BroadcastReceiver正在交互。Service</p>
-<p>是在前台运行的</p>
+<p><strong>前台进程</strong>：正在与用户交互，Activity、Service、 BroadcastReceiver正在交互，前台Service等</p>
 <p><strong>可见进程</strong>：onPause状态的Activity 或 进程持有的Service与前台或者可见Activity绑定</p>
 <p><strong>服务进程</strong>：进程运行着一个不可见的Service，比如后台播放音乐等</p>
 <p><strong>后台进程</strong>：Home键退到后台时，进程持有一个stop的Activity。</p>
 <p><strong>空进程</strong>：一个进程不包含任何活跃的组件，缓存下来为了下次更快地启动。</p>
-<p>上面只是一个大概的分类，ActivityManagerService会对进程进行评分，确定一个oom_adj值，进程回收时LowerMemoryKiller会根据这个评分进行判断</p>
-<p>当内存达到阈值时，会根据oom_adj和进程所占内存的大小来杀死进程。</p>
-<p>oom_adj相同的话，内存占用大的进程会优先被杀死。</p>
+<p>上面只是一个大概的分类，ActivityManagerService会对进程进行评分，确定一个oom_adj值，进程回收时LowerMemoryKiller会根据这个评分进行判断。</p>
+<p>当内存达到阈值时，会根据oom_adj和进程所占内存的大小来杀死进程。oom_adj相同的话，内存占用大的进程会优先被杀死。</p>
+<p>所以减少自身内存的占用，可以提高进程的优先级评分，不容易被系统杀死。</p>
 <h4 id="保活方法">保活方法</h4>
 <p>为了提高应用打开的速度，或者保证自己的核心应用不被杀死（比如OSService）。</p>
 <p>按照策略：</p>
