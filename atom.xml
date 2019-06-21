@@ -1,45 +1,2978 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://monkeylmj.github.io/</id>
-    <title>Gridea</title>
-    <updated>2019-06-21T13:28:38.075Z</updated>
+    <title>猴子公园</title>
+    <updated>2019-06-21T14:08:27.704Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://monkeylmj.github.io/"/>
     <link rel="self" href="https://monkeylmj.github.io//atom.xml"/>
     <subtitle>温故而知新</subtitle>
     <logo>https://monkeylmj.github.io//images/avatar.png</logo>
     <icon>https://monkeylmj.github.io//favicon.ico</icon>
-    <rights>All rights reserved 2019, Gridea</rights>
+    <rights>All rights reserved 2019, 猴子公园</rights>
     <entry>
-        <title type="html"><![CDATA[Hello Gridea]]></title>
-        <id>https://monkeylmj.github.io//post/hello-gridea</id>
-        <link href="https://monkeylmj.github.io//post/hello-gridea">
+        <title type="html"><![CDATA[Android性能优化 - 内存优化]]></title>
+        <id>https://monkeylmj.github.io//post/android-performance-memory</id>
+        <link href="https://monkeylmj.github.io//post/android-performance-memory">
         </link>
-        <updated>2018-12-11T16:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+        <updated>2019-03-08T07:34:26.000Z</updated>
+        <summary type="html"><![CDATA[<p>在内存方面我们通常会遇到几个问题：内存空间占用过大、内存泄露、内存溢出、内存抖动等。</p>
 ]]></summary>
-        <content type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+        <content type="html"><![CDATA[<p>在内存方面我们通常会遇到几个问题：内存空间占用过大、内存泄露、内存溢出、内存抖动等。</p>
+<!-- more-->
+<h2 id="1-为什么要做内存优化">1. 为什么要做内存优化</h2>
+<ul>
+<li>
+<p>避免OOM导致应用崩溃，提高应用稳定性</p>
+</li>
+<li>
+<p>内存资源是有限的，避免系统内存不足导致LowMemoryKiller机制触发杀死应用</p>
+</li>
+</ul>
+<h3 id="11-oom是什么">1.1 OOM是什么?</h3>
+<p>Android中定义了一个进程的内存上限，超过之后便会OOM崩溃。</p>
+<p>上限值可通过系统属性查看：</p>
+<p><img src="https://i.loli.net/2019/03/08/5c821d02c5790.png" alt=""></p>
+<p>第一个属性为一个标准应用能申请的最大内存。</p>
+<p>第二个属性为应用添加<strong>largeHeap=true</strong>之后能够申请的最大内存。</p>
+<h3 id="12-lowmemorykiller机制">1.2 LowMemoryKiller机制</h3>
+<p>####进程优先级</p>
+<p>当系统空间不足时，会按照进程的优先级对进程进行回收来腾出更多的空间给有需要的进程使用。</p>
+<p>Android中进程按优先级大概分为几个类型，优先级从高到底依次为：</p>
+<p><img src="https://i.loli.net/2019/03/08/5c821da6d4587.png" alt=""></p>
+<p><strong>前台进程</strong>：正在与用户交互，Activity Service BroadcastReceiver正在交互。Service</p>
+<p>是在前台运行的</p>
+<p><strong>可见进程</strong>：onPause状态的Activity 或 进程持有的Service与前台或者可见Activity绑定</p>
+<p><strong>服务进程</strong>：进程运行着一个不可见的Service，比如后台播放音乐等</p>
+<p><strong>后台进程</strong>：Home键退到后台时，进程持有一个stop的Activity。</p>
+<p><strong>空进程</strong>：一个进程不包含任何活跃的组件，缓存下来为了下次更快地启动。</p>
+<p>上面只是一个大概的分类，ActivityManagerService会对进程进行评分，确定一个oom_adj值，进程回收时LowerMemoryKiller会根据这个评分进行判断</p>
+<p>当内存达到阈值时，会根据oom_adj和进程所占内存的大小来杀死进程。</p>
+<p>oom_adj相同的话，内存占用大的进程会优先被杀死。</p>
+<h4 id="保活方法">保活方法</h4>
+<p>为了提高应用打开的速度，或者保证自己的核心应用不被杀死（比如OSService）。</p>
+<p>按照策略：</p>
+<p><strong>提高进程优先级，保证不被杀死</strong></p>
+<p>1、开启前台service，比如播放音乐的通知栏</p>
+<p>2、利用系统漏洞开启前台service（不显示通知）</p>
+<pre><code class="language-java"> @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (Build.VERSION.SDK_INT &lt; 18) {
+            startForeground(GRAY_SERVICE_ID, new Notification());//API &lt; 18 ，此方法能有效隐藏Notification上的图标
+        } else {
+            Intent innerIntent = new Intent(this, GrayInnerService.class);
+            startService(innerIntent);
+            startForeground(GRAY_SERVICE_ID, new Notification());
+        }
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+</code></pre>
+<p>3、1像素Activity</p>
+<p>4、系统应用添加persist=true属性</p>
+<p>5、内存优化，减少内存占用</p>
+<p><strong>应用被杀死之后，重新拉活</strong></p>
+<p>1、Service#onStartCommand返回STICKY。</p>
+<p>2、监听广播拉活（系统广播、应用全家桶、推送服务等）</p>
+<p>3、双进程守护</p>
+<p>4、JobScheduler（5.0+）</p>
+<p>...</p>
+<h2 id="2-常见的内存问题">2. 常见的内存问题</h2>
+<p>###2.1 GC机制
+<img src="https://i.loli.net/2019/03/08/5c821e6d2bf4c.png" alt=""></p>
+<p>JVM中从GC Roots对象开始遍历进行可达性分析，对于不可达的对象在GC时被标记回收。</p>
+<p>在Java语言里，可作为GC Roots对象的包括如下几种：</p>
+<p>a.虚拟机栈(栈桢中的本地变量表)中的引用的对象</p>
+<p>b.方法区中的类静态属性引用的对象</p>
+<p>c.方法区中的常量引用的对象</p>
+<p>d.本地方法栈中JNI的引用的对象</p>
+<p>摘自《深入理解Java虚拟机》</p>
+<h3 id="22-内存泄露">2.2 内存泄露</h3>
+<p>导致OOM的最主要原因。</p>
+<p>内存泄露是指进程分配的内存由于某些原因无法被释放，一般是长生命周期的对象强引用了短生命周期的对象。</p>
+<p><strong>常见内存泄露原因</strong>：</p>
+<ul>
+<li>
+<p>单例：引用了生命周期较短的对象</p>
+</li>
+<li>
+<p>静态变量</p>
+</li>
+<li>
+<p>非静态内部类和匿名内部类（引用外部类对象）</p>
+</li>
+<li>
+<p>资源使用后未释放</p>
+<p>IO、Cursor等资源使用后要及时关闭，释放缓冲对象、
+广播注册，取消注册成对出现、
+WebView用完之后destory</p>
+</li>
+<li>
+<p>异步操作在界面退出后没有停止</p>
+<p>MVP架构P层进行异步操作，退出时没有释放V层</p>
+</li>
+</ul>
+<h3 id="23-内存占用过大">2.3 内存占用过大</h3>
+<ul>
+<li>图片的使用（最主要的原因）</li>
+</ul>
+<blockquote>
+<p>Q: 一张20KB的png图片放在ImageView上占用多大的内存空间?</p>
+<p>A: 跟图片在apk中的资源文件夹dpi和目标设备dpi有关，跟ImageView的大小和png图片本身的大小无关。</p>
+<p>公式为: widthPx * heightPx  * targetDpi / inDpi * targetDpi/inDpi * 颜色深度</p>
+<p>详见: <a href="https://mp.weixin.qq.com/s?__biz=MzA3NTYzODYzMg==&amp;mid=403263974&amp;idx=1&amp;sn=b0315addbc47f3c38e65d9c633a12cd6&amp;scene=21#wechat_redirect">你的 Bitmap 究竟占多大内存？</a></p>
+</blockquote>
+<p>优化方案有:</p>
+<ol>
+<li>
+<p>使用合适尺寸的图片或者调整采样率（图片比View大时）</p>
+</li>
+<li>
+<p>图片格式RGB_555(没有透明通道）</p>
+</li>
+<li>
+<p>loading动画尽量用代码实现，减少图片</p>
+</li>
+<li>
+<p>Bitmap复用（参考Glide的BitmapPool实现）</p>
+</li>
+</ol>
+<ul>
+<li>
+<p>一些数据结构的优化</p>
+<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap、
+使用注解代替枚举类型等</p>
+</li>
+<li>
+<p>不好的代码</p>
+<p>使用ListView没有复用convertView、
+提前实例化用不到的对象</p>
+</li>
+</ul>
+<h3 id="24-内存抖动">2.4 内存抖动</h3>
+<p>内存短时间内大量地分配和回收，频繁的GC可能会导致卡顿问题。甚至会导致OOM。</p>
+<p>优化方案有：</p>
+<p>1、尽量避免在循环体内大量创建对象，应该把对象创建移到循环体外。</p>
+<p>2、自定义View的onDraw()方法会被频繁调用，不应该频繁的创建对象。</p>
+<p>3、使用对象池（比如MessagePool等）</p>
+<p><strong>监控和优化方案：</strong></p>
+<p>LeakCanaray //TODO 实现原理</p>
+<p>Android profiler</p>
+<p>实战如何看内存信息</p>
+<p>MAT</p>
+<h3 id="内存占用过大">内存占用过大</h3>
+<p>解决了内存泄露问题之后，开始着手对应用正常分配的内存进行优化，减小基数</p>
+<p><strong>常见原因</strong></p>
+<ul>
+<li>图片</li>
+</ul>
+<p>图片到底占了多大？</p>
+<p>跟放置的文件夹和目标density有关： widthPx * heightPx * 颜色深度。 与ImageView大小无关。</p>
+<p>优化：</p>
+<p>1、采样率</p>
+<p>2、图片格式RGB_565</p>
+<p>3、loading动画自己画 //TODO svg等</p>
+<p>4、缓存池，系统级别的缓存、软引用、弱引用</p>
+<p>5、及时回收，recycler</p>
+<p>Bitmap的优化、缓存池的实现。//TODO参考第三方库的实现</p>
+<ul>
+<li>数据结构优化</li>
+</ul>
+<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap等。</p>
+<p>枚举：使用注解代替</p>
+<p>ListView的convertView复用</p>
+<p>懒加载（不需要的对象延迟加载）</p>
+<p><strong>数据相关</strong>：序列化数据使用protobuf可以比xml省30%内存，慎用shareprefercnce，因为对于同一个sp，会将整个xml文件载入内存，有时候为了读一个配置，就会将几百k的数据读进内存，数据库字段尽量精简，只读取所需字段。</p>
+<h3 id="内存抖动">内存抖动</h3>
+<p>内存短时间内大量地分配和回收，频繁的GC可能会导致卡顿问题。甚至会导致OOM</p>
+<p>主要原因还是有因为大量小的对象频繁创建，导致内存碎片，从而当需要分配内存时，虽然总体上还是有剩余内存可分配，而由于这些内存不连续，导致无法分配，系统直接就返回OOM了</p>
+<h2 id="3-内存检测工具的使用">3. 内存检测工具的使用</h2>
+<h3 id="31-leakcanary">3.1 LeakCanary</h3>
+<p>内存泄露问题检测的利器，使用起来非常简单。</p>
+<p>build.gradle</p>
+<pre><code class="language-java">dependencies {
+  debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.3'
+  releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.3'
+  // Optional, if you use support library fragments:
+  debugImplementation 'com.squareup.leakcanary:leakcanary-support-fragment:1.6.3'
+}
+</code></pre>
+<p>Application中</p>
+<pre><code class="language-java">public class ExampleApplication extends Application {
+
+  @Override public void onCreate() {
+    super.onCreate();
+    if (LeakCanary.isInAnalyzerProcess(this)) {
+      // This process is dedicated to LeakCanary for heap analysis.
+      // You should not init your app in this process.
+      return;
+    }
+    LeakCanary.install(this);
+    // Normal app init code...
+  }
+}
+</code></pre>
+<p>当应用中有内存泄露问题时，会有如下界面，进行引用的分析：</p>
+<p><img src="https://i.loli.net/2019/03/08/5c822278b7645.png" alt=""></p>
+<p><strong>LeakCanary是怎么来检测内存泄露的呢？</strong></p>
+<p>十分简单，两步：</p>
+<p>1、监听Activity的onDestroy</p>
+<p><img src="https://i.loli.net/2019/03/08/5c8222f314c14.png" alt=""></p>
+<p>Application提供了callback可以监听应用中任何一个Activity的生命周期变化，这里在Activity destroy时对Activity进行watch。</p>
+<p>2、利用弱引用+引用队列检测对象是否被回收。</p>
+<blockquote>
+<p>这里说一下弱引用的特性：</p>
+<p>1、被弱引用引用的对象，在GC的时候一定会被回收。</p>
+<p>2、弱引用创建时可以传入一个引用队列，如果对象被回收，则这个弱引用会被放入引用队列中。</p>
+<p>由此，检测一个对象是否被回收就通过弱引用来引用，然后触发GC，最后检测引用队列中是否存在这个引用即可。</p>
+</blockquote>
+<p><img src="https://i.loli.net/2019/03/08/5c8223a9954e1.png" alt=""></p>
+<p>上面这种简单的使用只能检测出Activity对象的泄露，如果要检测其他对象的泄露，可以代码中主动watch想要检测的对象，这里不细说。</p>
+<h3 id="32-android-profiler工具">3.2 Android Profiler工具</h3>
+<p>AS中Run -&gt; Profile，可以查看CPU、内存、网络等信息。</p>
+<p><img src="https://i.loli.net/2019/03/08/5c8224d439e36.png" alt=""></p>
+<p>检查内存泄露的方式为：</p>
+<p>1、反复多几次进入、退出怀疑的界面</p>
+<p>2、最后退出怀疑的界面之后，手动触发一下GC</p>
+<p>3、dump现在内存信息（上图），进行分析。</p>
+<p>Android Profiler工具已经可以提供比较详细的信息，比如引用信息等，个人感觉已经可以替代老牌内存分析工具MAT了。这里不详细介绍工具的用法，大家可以实际去操作一遍就比较容易理解。</p>
+<h3 id="33-mat工具">3.3 MAT工具</h3>
+<p><img src="https://i.loli.net/2019/03/08/5c8225f67dd5d.png" alt=""></p>
+<p>Android Profiler工具可以将内存信息导出为hprof文件，然后必须利用platform-tools中提供的工具转换成MAT能够识别的hprof文件，然后打开进行分析：</p>
+<pre><code class="language-shell">hprof-conv leak.hprof leak-mat.hprof
+</code></pre>
+<p>MAT工具也提供了大量的信息供开发者进行分析，大家实际操作一下分析，更加容易理解。</p>
+<h2 id="总结">总结</h2>
+<p>1、对内存优化可以避免OOM，或者被系统杀死，提高系统稳定性。</p>
+<p>2、介绍了常见的内存问题的优化手段：内存泄露、内存溢出、内存抖动等。</p>
+<p>3、介绍了三个检测、分析内存的工具：LeakCanary、Android Profiler、MAT。只要动手实际操作几遍，就可以比较熟练地掌握这几个工具的使用</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[okhttp源码解析]]></title>
+        <id>https://monkeylmj.github.io//post/okhttp</id>
+        <link href="https://monkeylmj.github.io//post/okhttp">
+        </link>
+        <updated>2019-03-03T14:18:27.000Z</updated>
+        <summary type="html"><![CDATA[<p>简要总结一下OKHttp框架的整体流程，结合其中用到的设计模式进行说明。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>简要总结一下OKHttp框架的整体流程，结合其中用到的设计模式进行说明。</p>
 <!-- more -->
-<p><a href="https://github.com/getgridea/gridea">Github</a><br>
-<a href="http://hvenotes.fehey.com/">Gridea 主页</a><br>
-<a href="http://fehey.com/">示例网站</a></p>
-<h2 id="特性">特性👇</h2>
-<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
-<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
-<p>🏷️  你可以对文章进行标签分组</p>
-<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
-<p>💻  你可以在 <strong>𝖶𝗂𝗇𝖽𝗈𝗐𝗌</strong> 或 <strong>𝖬𝖺𝖼𝖮𝖲</strong> 设备上使用此客户端</p>
-<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
-<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
-<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
-<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
-<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
-<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前🏃</p>
-<p>未来，它一定会成为你离不开的伙伴</p>
-<p>尽情发挥你的才华吧！</p>
-<p>😘 Enjoy~</p>
+<h2 id="1-使用方式">1. 使用方式</h2>
+<pre><code class="language-java">//1.创建Client
+OkHttpClient client = new OkHttpClient();
+
+//2.创建请求
+Request request = new Request.Builder()
+                .url(&quot;xxx&quot;)
+                .build();
+//3.执行(同步or异步)
+okHttpClient.newCall(request).execute();
+okHttpClient.newCall(request).enqueue(responseCallback);
+</code></pre>
+<h2 id="2-源码设计模式解析">2. 源码设计模式解析</h2>
+<h3 id="21-okhttpclient和request对象的实例化">2.1 OKHttpClient和Request对象的实例化</h3>
+<p>OKHttpClient和Request对象包含大量的属性，通过<strong>Builder模式</strong>按需配置，方便地创建对象。</p>
+<p>@Request.Builder</p>
+<pre><code class="language-java">public static class Builder {
+    HttpUrl url;
+    String method;
+    Headers.Builder headers;
+    RequestBody body;
+    Object tag;
+
+    public Builder() {
+      this.method = &quot;GET&quot;;
+      this.headers = new Headers.Builder();
+    }
+
+    Builder(Request request) {
+      this.url = request.url;
+      this.method = request.method;
+      this.body = request.body;
+      this.tag = request.tag;
+      this.headers = request.headers.newBuilder();
+    }
+
+    public Builder url(HttpUrl url) {
+      if (url == null) throw new NullPointerException(&quot;url == null&quot;);
+      this.url = url;
+      return this;
+    }
+    
+    //省略...
+}
+</code></pre>
+<p>@OKHttpClient 中包含大量的请求过程的重要属性，可通过Builder来配置</p>
+<pre><code class="language-java">class OKHttpClient {
+  final Dispatcher dispatcher;
+  final @Nullable Proxy proxy;
+  final List&lt;Protocol&gt; protocols;
+  final List&lt;ConnectionSpec&gt; connectionSpecs;
+  final List&lt;Interceptor&gt; interceptors;
+  final List&lt;Interceptor&gt; networkInterceptors;
+  final EventListener.Factory eventListenerFactory;
+  final ProxySelector proxySelector;
+  final CookieJar cookieJar;
+  final @Nullable Cache cache;
+  final @Nullable InternalCache internalCache;
+  final SocketFactory socketFactory;
+  final @Nullable SSLSocketFactory sslSocketFactory;
+  final @Nullable CertificateChainCleaner certificateChainCleaner;
+  final HostnameVerifier hostnameVerifier;
+  final CertificatePinner certificatePinner;
+  final Authenticator proxyAuthenticator;
+  final Authenticator authenticator;
+  final ConnectionPool connectionPool;
+  final Dns dns;
+  final boolean followSslRedirects;
+  final boolean followRedirects;
+  final boolean retryOnConnectionFailure;
+  final int connectTimeout;
+  final int readTimeout;
+  final int writeTimeout;
+  final int pingInterval;
+}
+</code></pre>
+<h3 id="22-okhttpclientnewcall创建call对象">2.2 okHttpClient.newCall创建Call对象</h3>
+<pre><code class="language-java">@Override
+public Call newCall(Request request) {
+   return RealCall.newRealCall(this, request, false /* for web socket */);
+}
+</code></pre>
+<p>这里看到OKHttpClient类实现了Call.Factory接口，方法中创建了Call的实现类RealCall。</p>
+<p>@Call.Factory</p>
+<pre><code class="language-java">  interface Factory {
+    Call newCall(Request request);
+  }
+</code></pre>
+<p>这里用到了<strong>工厂方法模式</strong>，Factory接口提供newCall方法，不同的工厂实现类可以继承来生产Call类型的对象。目前只有OKHttpClient一个工厂实现类，满足开闭原则，以后可以直接添加其他工厂来生成不同的Call，方便扩展。</p>
+<h3 id="23-call执行">2.3 Call执行</h3>
+<p>上一步生成的RealCall开始执行，这里选择同步执行的方式来举例往下查看流程，异步流程类似（只是交给dispatcher放到线程池里执行）</p>
+<p>@RealCall#execute</p>
+<pre><code class="language-java">@Override public Response execute() throws IOException {
+    synchronized (this) {
+      if (executed) throw new IllegalStateException(&quot;Already Executed&quot;);
+      executed = true;
+    }
+    captureCallStackTrace();
+    eventListener.callStart(this);
+    try {
+      client.dispatcher().executed(this);
+      Response result = getResponseWithInterceptorChain();
+      if (result == null) throw new IOException(&quot;Canceled&quot;);
+      return result;
+    } catch (IOException e) {
+      eventListener.callFailed(this, e);
+      throw e;
+    } finally {
+      client.dispatcher().finished(this);
+    }
+  }
+</code></pre>
+<p>逻辑非常简单，核心就一句话： <code>Response result = getResponseWithInterceptorChain()</code>，顾名思义这里就是通过一层层拦截器最终获取到Response，整个流程结束。</p>
+<h3 id="24-拦截器的实现">2.4 拦截器的实现</h3>
+<p>OKHttp网络请求流程的核心部分，使用了<strong>责任链模式</strong>来完成请求发送者和请求处理者的解耦（只需将请求发到链上即可，无须关系处理的细节）。</p>
+<p>@RealCall#getResponseWithInterceptorChain</p>
+<pre><code class="language-java">Response getResponseWithInterceptorChain() throws IOException {
+    // Build a full stack of interceptors.
+    List&lt;Interceptor&gt; interceptors = new ArrayList&lt;&gt;();
+    interceptors.addAll(client.interceptors());
+    interceptors.add(retryAndFollowUpInterceptor);
+    interceptors.add(new BridgeInterceptor(client.cookieJar()));
+    interceptors.add(new CacheInterceptor(client.internalCache()));
+    interceptors.add(new ConnectInterceptor(client));
+    if (!forWebSocket) {
+      interceptors.addAll(client.networkInterceptors());
+    }
+    interceptors.add(new CallServerInterceptor(forWebSocket));
+
+    Interceptor.Chain chain = new RealInterceptorChain(interceptors, null, null, null, 0,
+        originalRequest, this, eventListener, client.connectTimeoutMillis(),
+        client.readTimeoutMillis(), client.writeTimeoutMillis());
+
+    return chain.proceed(originalRequest);
+  }
+</code></pre>
+<p>首先，构造了一个interceptors列表，其中加入了一些默认的拦截器，client.interceptors和client.networkInterceptors为自定义的拦截器（构造OKHttpClient时加入），所有拦截器都实现了Interceptor接口。</p>
+<p>然后，构造了一个职责链 RealInterceptorChain持有了所有的拦截器，然后将请求发到职责链上。</p>
+<p>@RealInterceptorChain#proceed</p>
+<pre><code class="language-java">public Response proceed(Request request, StreamAllocation streamAllocation, HttpCodec httpCodec,RealConnection connection) throws IOException {
+     //...
+     // Call the next interceptor in the chain.
+    RealInterceptorChain next = new RealInterceptorChain(interceptors, streamAllocation, httpCodec,
+        connection, index + 1, request, call, eventListener, connectTimeout, readTimeout,
+        writeTimeout);
+    Interceptor interceptor = interceptors.get(index);
+    Response response = interceptor.intercept(next);
+    //...
+    return response;
+  }
+</code></pre>
+<p>处理的逻辑很简单：取出index所在的拦截器，执行intercept方法进行拦截，传入的参数为新构造的职责链（index+1，指向了下一个拦截器）。</p>
+<p>UML图如下：</p>
+<p><img src="https://i.loli.net/2019/02/23/5c70cba2935de.png" alt=""></p>
+<p>最后，写一个简单的自定义拦截器，看下大概的流程：</p>
+<pre><code class="language-java">public class TestInterceptor implements Interceptor {
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request request = chain.request(); //取出request
+        
+        //请求前拦截进行一些处理...
+        
+        Response response = chain.proceed(request); //传给下一个拦截器
+        
+        //响应后拦截进行一些处理...
+        
+        return response;
+    }
+}
+</code></pre>
+<p>到此，OKHttp的网络请求流程已经完整！</p>
+<h2 id="总结">总结</h2>
+<p><img src="https://i.loli.net/2019/02/23/5c70be03dc3e8.png" alt=""></p>
+<p>OKHttp网络请求框架的实现很优雅，各个类的职责明确，整个流程跟把大象装在冰箱里一样简单：</p>
+<p>1、组装Request</p>
+<p>2、Client发送Request（经过各个拦截器的处理）</p>
+<p>3、返回Response</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Android性能优化 - UI优化]]></title>
+        <id>https://monkeylmj.github.io//post/android-performance-ui</id>
+        <link href="https://monkeylmj.github.io//post/android-performance-ui">
+        </link>
+        <updated>2019-03-02T07:17:38.000Z</updated>
+        <summary type="html"><![CDATA[<p>系统地总结一下Android性能优化关于UI优化方面的知识点。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>系统地总结一下Android性能优化关于UI优化方面的知识点。</p>
+<!-- more -->
+<h2 id="16ms原则">16ms原则</h2>
+<p>UI的优化就是对卡顿问题的优化，首先了解一下Android的渲染流程：</p>
+<p>1、CPU计算数据</p>
+<p>2、GPU对数据进行渲染，放到buffer里存起来</p>
+<p>3、显示器把buffer的数据显示出来</p>
+<p><strong>我们都知道要为了UI的顺畅需要保证一次的渲染在16ms之内，这是为什么呢？</strong></p>
+<p>Android手机的屏幕刷新率一般是60HZ，也就是1s刷新60次，每16ms刷新一次把图像显示在屏幕上。这就要求我们的UI绘制一定要在16ms内完成，否则就会看到两帧同样的画面，也就是掉帧。</p>
+<p>我们经常看到如下图，也就是UI正常渲染的情况：</p>
+<p><img src="https://i.loli.net/2018/12/10/5c0e5096be3dc.png" alt=""></p>
+<p>最初看到这张图的时候就有一个疑问，屏幕每16ms刷新一次，但是触发绘制的时间点是不确定的呀。如果恰巧在一帧的结尾触发了绘制（比如调用了invalidate），这时屏幕取出的数据肯定是上一帧的，不也会掉帧吗？</p>
+<p>要弄清这个疑问就需要对Android的绘制流程进行一个梳理：</p>
+<p>在Android 4.1之后引进了VSYNC和双重缓冲的技术大大增加了UI的流畅度，实际上渲染的流程可以用下图更精确地表示。</p>
+<p><img src="https://i.loli.net/2018/12/10/5c0e50ae5a657.png" alt=""></p>
+<p>如上图，屏幕每隔16ms都会发出一个VSYNC信号，app层接收到垂直同步信号之后CPU开始计算数据（measure、layout、draw）、GPU渲染图像。等到下一个VSYNC信号到来时，将上次渲染的图像显示出来，再继续进行下一次的渲染。从图上看来，每次的绘制都是精确地在VSYNC信号到来时，并不会出现刚刚说的在一帧的结尾进行绘制。</p>
+<p><strong>那么Android源码中是怎么实现垂直同步信号控制App层的绘制的呢？</strong></p>
+<p>首先从一个能触发UI绘制的方法入手 View#invalidate</p>
+<p>从源码中可以看出View#invlidate会层层向上找parent，最终找到ViewRootImpl类的invalidateChildInParent方法，该方法中的主要逻辑是调用了scheduleTraversals()</p>
+<p>ViewRootImpl#scheduleTraversals</p>
+<pre><code class="language-java">void scheduleTraversals() {
+        if (!mTraversalScheduled) {
+            mTraversalScheduled = true;
+            mTraversalBarrier = mHandler.getLooper().postSyncBarrier();
+            mChoreographer.postCallback(
+                    Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, null);
+            if (!mUnbufferedInputDispatch) {
+                scheduleConsumeBatchedInput();
+            }
+            notifyRendererOfFramePending();
+        }
+    }
+</code></pre>
+<p>在L6向 Choreographer中post一个Runnable：</p>
+<pre><code class="language-java">final class TraversalRunnable implements Runnable {
+        @Override
+        public void run() {
+            doTraversal();
+        }
+ }
+</code></pre>
+<p>ViewRootImpl#doTraversal</p>
+<pre><code class="language-java">void doTraversal() {
+        if (mTraversalScheduled) {
+            mTraversalScheduled = false;
+            mHandler.getLooper().removeSyncBarrier(mTraversalBarrier);
+
+            if (mProfile) {
+                Debug.startMethodTracing(&quot;ViewAncestor&quot;);
+            }
+
+            Trace.traceBegin(Trace.TRACE_TAG_VIEW, &quot;performTraversals&quot;);
+            try {
+                performTraversals();
+            } finally {
+                Trace.traceEnd(Trace.TRACE_TAG_VIEW);
+            }
+
+            if (mProfile) {
+                Debug.stopMethodTracing();
+                mProfile = false;
+            }
+        }
+    }
+</code></pre>
+<blockquote>
+<p>Trace.traceBegin和Trace.traceEnd是framework中添加的分析方法，后面可以帮助我们分析耗时等，在framework的很多地方都有类似的调试方法。</p>
+</blockquote>
+<p>ViewRootImpl#performTraversals</p>
+<pre><code class="language-java">private void performTraversals() {
+    //省略大量代码...
+    performMeasure();
+    performLayout();
+    performDraw();
+}
+</code></pre>
+<p>最终可以得出结论，这个Runnable执行的结果就是开始绘制整个View视图。</p>
+<p>接下来看看Runnable是什么时候执行的，post方法最终进入Choreographer#postCallbackDelayedInternal。</p>
+<p>Choreographer#postCallbackDelayedInternal</p>
+<pre><code class="language-java">private void postCallbackDelayedInternal(int callbackType,
+            Object action, Object token, long delayMillis) {
+        //...
+        synchronized (mLock) {
+            final long now = SystemClock.uptimeMillis();
+            final long dueTime = now + delayMillis;
+            mCallbackQueues[callbackType].addCallbackLocked(dueTime, action, token);
+
+            scheduleFrameLocked(now);
+        }
+    }
+</code></pre>
+<p>L6将Runnable放入队列中，然后调用了scheduleFrameLocked(now)方法，继续追下去:</p>
+<p>DisplayEventReceiver#schedulVsync</p>
+<pre><code class="language-java">/**
+ * Schedules a single vertical sync pulse to be delivered when the next
+ * display frame begins.
+ */
+public void scheduleVsync() {
+    //...
+    nativeScheduleVsync(mReceiverPtr);
+ }
+</code></pre>
+<p>接下来就调用了native方法，追踪不下去了，从方法的注释来看好像是在告诉底层: <strong>下一帧来的时候给我安排一个VSYNC信号</strong>。</p>
+<p>回头再继续看队列中的Runnable什么时候被取出来执行了,经过梳理发现调用的根源为:</p>
+<p>DisplayEventReceiver#dispatchVsync</p>
+<pre><code class="language-java"> // Called from native code.
+@SuppressWarnings(&quot;unused&quot;)
+private void dispatchVsync(long timestampNanos, int builtInDisplayId, int frame) {
+   onVsync(timestampNanos, builtInDisplayId, frame);
+}
+</code></pre>
+<p>FrameDisplayEventReceiver#onVsync</p>
+<pre><code class="language-java">private final class FrameDisplayEventReceiver extends DisplayEventReceiver
+        implements Runnable {
+    private boolean mHavePendingVsync;
+    private long mTimestampNanos;
+    private int mFrame;
+
+    public FrameDisplayEventReceiver(Looper looper, int vsyncSource) {
+        super(looper, vsyncSource);
+    }
+
+    @Override
+    public void onVsync(long timestampNanos, int builtInDisplayId, int frame) {
+        mTimestampNanos = timestampNanos;
+        mFrame = frame;
+        //画重点：向主线程发送message
+        Message msg = Message.obtain(mHandler, this);
+        msg.setAsynchronous(true);
+        mHandler.sendMessageAtTime(msg, timestampNanos / TimeUtils.NANOS_PER_MS);
+    }
+
+    @Override
+    public void run() {
+        mHavePendingVsync = false;
+        doFrame(mTimestampNanos, mFrame);
+    }
+}
+</code></pre>
+<p>Choreographer#doFrame</p>
+<pre><code class="language-java">void doFrame(long frameTimeNanos, int frame) {
+    //省略大量代码
+    doCallbacks(Choreographer.CALLBACK_INPUT, frameTimeNanos);
+	doCallbacks(Choreographer.CALLBACK_ANIMATION, frameTimeNanos);
+    doCallbacks(Choreographer.CALLBACK_TRAVERSAL, frameTimeNanos);
+    doCallbacks(Choreographer.CALLBACK_COMMIT, frameTimeNanos);
+}
+</code></pre>
+<p>继续调用：</p>
+<pre><code class="language-java">void doCallbacks(int callbackType, long frameTimeNanos) {
+     callbacks = mCallbackQueues[callbackType].extractDueCallbacksLocked(
+                    now / TimeUtils.NANOS_PER_MS);
+    try {
+            Trace.traceBegin(Trace.TRACE_TAG_VIEW,CALLBACK_TRACE_TITLES[callbackType]);
+            for (CallbackRecord c = callbacks; c != null; c = c.next) {
+                if (DEBUG_FRAMES) {
+                    Log.d(TAG, &quot;RunCallback: type=&quot; + callbackType
+                            + &quot;, action=&quot; + c.action + &quot;, token=&quot; + c.token
+                            + &quot;, latencyMillis=&quot; + (SystemClock.uptimeMillis() -c.dueTime));
+                }
+                c.run(frameTimeNanos);
+            }
+        }
+}
+</code></pre>
+<p>至此，从CallbackQueue中将之前添加的CALLBACK_TRAVERSAL类型的任务取出、执行，进入绘制流程。</p>
+<p><strong>总结一下：</strong></p>
+<p>1、应用中调用刷新时，将遍历View树的操作封装在Runnable里，然后放到Choreographer队列中，并且通知底层安排下一帧的VSYNC信号。
+2、每隔16ms屏幕的VSYNC信号到来时，从队列中取出Runnable执行，绘制、渲染View树。
+3、一帧的时间内调用多次绘制方法，只有第一次生效，会添加一个绘制任务到队列中（因为有mTraversalScheduled变量的控制。其他的绘制也没必要，绘制时会遍历整棵View树）。</p>
+<h2 id="卡顿原因">卡顿原因</h2>
+<p>基于对上面UI渲染流程的梳理，可以找到造成一帧绘制时间超过16ms的点：</p>
+<p>1、主线程进行耗时操作导致绘制操作迟迟不能进行，可能原因：</p>
+<ul>
+<li>
+<p>主线程在执行其他的耗时操作，导致接收到VSYNC信号时不能及时处理doFrame的message。</p>
+<pre><code class="language-java">@Override
+public void onVsync(long timestampNanos, int builtInDisplayId, int frame) {
+  mTimestampNanos = timestampNanos;
+  mFrame = frame;
+  //画重点：切换到主线程
+  Message msg = Message.obtain(mHandler, this);
+  msg.setAsynchronous(true);
+  mHandler.sendMessageAtTime(msg, timestampNanos / TimeUtils.NANOS_PER_MS);
+}
+
+@Override
+    public void run() {
+        mHavePendingVsync = false;
+        doFrame(mTimestampNanos, mFrame);
+    }
+</code></pre>
+</li>
+<li>
+<p>输入操作和动画操作在主线程耗时。</p>
+<pre><code class="language-java">doCallbacks(Choreographer.CALLBACK_INPUT, frameTimeNanos);
+doCallbacks(Choreographer.CALLBACK_ANIMATION, frameTimeNanos);
+doCallbacks(Choreographer.CALLBACK_TRAVERSAL, frameTimeNanos);
+</code></pre>
+</li>
+</ul>
+<p>2、CPU绘制耗时过长，可能的原因：</p>
+<p>布局层级复杂导致measure、layout等需要更长的时间、</p>
+<p>自定义控件onMeasure、onLayout、onDraw逻辑有问题（可能有耗时操作?）</p>
+<p>3、GPU渲染耗时过长，可能的原因：</p>
+<p>1中绘制的View树复杂，导致GPU需要执行更多的命令来渲染一帧、</p>
+<p>自定义View draw逻辑复杂</p>
+<h2 id="卡顿检测">卡顿检测</h2>
+<h3 id="1-gpu渲染模式分析">1. GPU渲染模式分析</h3>
+<p>直观地看出哪里出了问题</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a30a378175.png" alt=""></p>
+<p>每个色块的含义如下：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a30bc36040.png" alt=""></p>
+<p><img src="https://i.loli.net/2018/11/14/5bebd6e9bc1b0.png" alt=""></p>
+<p>Misc: 主线程在执行耗时操作导致VSync到来时不能及时执行绘制渲染</p>
+<p>Input:  事件回调耗时太多（比如move-&gt; scroll 触发RecyclerView滚动时inflate）</p>
+<p>Anim:  动画回调耗时太多（比如fling动画触发RecyclerView滚动时inflate）</p>
+<p>Measure/Layout: 1、布局复杂  2、double taxation 3、onLayout和onMeasure执行耗时操作。</p>
+<p>Draw: onDraw做了耗时操作。</p>
+<p>Sync&amp;Upload: Android5.0之后UI的绘制和渲染在不同的线程中，主线程进行UI的绘制，创建DisplayList ，RenderThread 进行UI的渲染。 主线程的bitmap需要上传到GPU的内存中进行绘制，如果此条过高说明有大量图片。</p>
+<p>Issue command: RenderThread将DisplayList的OpenGL绘制命令进行优化之后发送到GPU，此条过高可能是因为绘制的命令非常多</p>
+<p>Swap buffer：CPU等待GPU完成工作的时间，过高表示GPU正忙。</p>
+<h3 id="2-systrace">2. systrace</h3>
+<p>Android SDK tools中提供的工具，相比GPU呈现模式分析，提供了一些更加详细的详细数据帮助我们分析系统的状态，分析卡顿原因。</p>
+<p>Android在Framework的关键代码中添加了 <code>Trace.traceBegin</code> 和 <code>Trace.traceEnd</code> 方法，此工具就是把这些方法收集的信息抓出来，便于我们分析应用的运行情况。</p>
+<p>简单的使用方式：</p>
+<pre><code>```shell
+python systrace -l #查看支持抓取的种类
+
+python systrace [view,gfx,sched] -o [output.html]
+
+open [output.html] #查看trace文件
+```
+</code></pre>
+<p><img src="https://i.loli.net/2018/11/20/5bf3a6c5366a5.png" alt=""></p>
+<p>一些关键点：</p>
+<p>右侧的Alert提示卡顿出现的点和原因。</p>
+<p>中间红色的F代表出现卡顿的帧，可以查看在哪一步消耗了多长时间。</p>
+<p>右上角？查看操作快捷键</p>
+<h3 id="3-android-cpu-profiler">3. Android  CPU Profiler</h3>
+<p>记录详细的调用栈，进一步统计方法的时间消耗，定位问题代码的位置。</p>
+<p><img src="https://i.loli.net/2018/12/12/5c10c042a8d33.png" alt=""></p>
+<h3 id="4-gpu过度绘制分析">4. GPU过度绘制分析</h3>
+<p><img src="https://i.loli.net/2018/12/13/5c11f2bd7b458.png" alt=""></p>
+<ul>
+<li><strong>真彩色：</strong> 没有过度绘制</li>
+<li><strong>蓝色：</strong> 过度绘制 1 次</li>
+<li><strong>绿色：</strong> 过度绘制 2 次</li>
+<li><strong>粉色：</strong> 过度绘制 3 次</li>
+<li><strong>红色：</strong> 过度绘制 4 次或更多</li>
+</ul>
+<p>有些过度绘制是避免不了的，但是要尽量做到真彩色和蓝色。</p>
+<h3 id="5-通过代码检测">5、通过代码检测</h3>
+<p><strong>BlockCanary</strong></p>
+<p>原理：</p>
+<p>Looper#loop()</p>
+<pre><code>```java
+for (;;) {
+    Message msg = queue.next(); // might block
+    // This must be in a local variable, in case a UI event sets the logger
+    Printer logging = me.mLogging;
+    if (logging != null) {
+        logging.println(&quot;&gt;&gt;&gt;&gt;&gt; Dispatching to &quot; + msg.target + &quot; &quot; +
+                msg.callback + &quot;: &quot; + msg.what);
+    }
+
+    msg.target.dispatchMessage(msg);
+
+    if (logging != null) {
+        logging.println(&quot;&lt;&lt;&lt;&lt;&lt; Finished to &quot; + msg.target + &quot; &quot; + msg.callback);
+    }
+    // ignore some code...
+}
+```
+</code></pre>
+<p><strong>Choreographer</strong></p>
+<pre><code>```java
+Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() {
+            @Override
+            public void doFrame(long frameTimeNanos) {
+
+            }
+        });
+```
+</code></pre>
+<h3 id="6lint工具">6.Lint工具</h3>
+<p><img src="https://developer.android.com/topic/performance/images/lint-display.png" alt="img"></p>
+<h2 id="最佳实践">最佳实践</h2>
+<h3 id="cpu绘制阶段优化measurelayoutdraw阶段">CPU绘制阶段优化（measure/layout/draw阶段)</h3>
+<p>主要是减少布局的层级</p>
+<p>1、RelativeLayout还是LinearLayout？</p>
+<p>RelativeLayout或者LinearLayout使用weight会测量两次</p>
+<p>如果RelativeLayout嵌套RelativeLayout会导致子View测量更多次</p>
+<p><img src="https://i.loli.net/2018/12/12/5c10c0d1657b8.png" alt=""></p>
+<p>建议：
+a、使用RelativeLayout来减少View层级，使View树扁平化。
+b、如果层级相同，优先使用LinearLayout
+c、考虑使用ContraintLayout</p>
+<p>2、减少无用的嵌套布局</p>
+<pre><code>```xml
+&lt;LinearLayout
+        android:layout_width=&quot;wrap_content&quot;
+        android:layout_height=&quot;wrap_content&quot;&gt;
+
+        &lt;ImageView
+            android:layout_width=&quot;wrap_content&quot;
+            android:layout_height=&quot;wrap_content&quot;
+            android:src=&quot;@drawable/test&quot; /&gt;
+
+        &lt;TextView
+            android:layout_width=&quot;wrap_content&quot;
+            android:layout_height=&quot;wrap_content&quot; /&gt;
+
+&lt;/LinearLayout&gt;
+```
+</code></pre>
+<p>替换为：</p>
+<pre><code>```java
+&lt;TextView
+        android:layout_width=&quot;wrap_content&quot;
+        android:layout_height=&quot;wrap_content&quot;
+        android:drawableStart=&quot;@drawable/test&quot; /&gt;
+```
+</code></pre>
+<p>3、自定义ViewGroup或者include时，使用merge标签、使用ViewStub标签</p>
+<p>4、不可见的控件优先使用Gone而不是Invisible</p>
+<p>5、RecyclerView: notifyDataSetChanged 对于小更新没必要通知全部刷新</p>
+<p>6、...</p>
+<h3 id="gpu渲染阶段优化">GPU渲染阶段优化</h3>
+<p>1、少用一些执行起来比较耗时的Canvas api，比如：</p>
+<p>Canvas.saveLayer()</p>
+<p>Canvas.drawPath()</p>
+<p>Canvas.clipPath()</p>
+<pre><code>```java
+canvas.save();
+canvas.clipPath(mCirclePath);
+canvas.drawBitmap(mBitmap, 0f, 0f, mPaint);
+canvas.restore();
+```
+</code></pre>
+<p>替换为：</p>
+<pre><code>```java
+// one time init:
+mPaint.setShader(new BitmapShader(mBitmap, TileMode.CLAMP, TileMode.CLAMP));
+// at draw time:
+canvas.drawPath(mCirclePath, mPaint);
+```
+</code></pre>
+<p>2、 Bitmap uploads</p>
+<p><img src="https://i.loli.net/2018/12/12/5c10c12241e96.png" alt=""></p>
+<p>bitmap在同步上传到GPU的过程中消耗时间，主线程是阻塞的，可以根据控件大小优化bitmap大小等。</p>
+<p>3、减少过度绘制</p>
+<ul>
+<li>移除不需要的背景</li>
+<li>优化布局的层级，不要有过多的View堆叠</li>
+<li>自定义View使用clipRect减少过度绘制，比如</li>
+</ul>
+<p><img src="https://i.loli.net/2018/12/12/5c10c1481b722.png" alt=""></p>
+<ul>
+<li>
+<p>减少透明度的使用，使用alpha会导致先绘制正常的像素，再进行混合：</p>
+<p>1、TextView想要文字透明可以给textColor添加透明度而不是整个TextView设置alpha</p>
+<p>2、ImageView 透明使用 setImageAlpha</p>
+<p>3、自定义控件 的话设置paint透明度</p>
+<p>另外，alpha的使用还会显著影响GPU的渲染性能，因为设置alpha的View会先绘制在离屏缓存，再绘制到屏幕上。<a href="https://www.youtube.com/watch?v=wIy8g8yNhNk&amp;index=46&amp;list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE">原因</a></p>
+</li>
+</ul>
+<h3 id="主线程耗时操作优化">主线程耗时操作优化</h3>
+<p>1、不要在主线程执行耗时操作...</p>
+<p>2、IPC的调用会阻塞主线程，注意</p>
+<p>3、不要在onDraw等位置创建大量临时对象，会造成大量的GC，stop the world</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[路径动画的实现方案]]></title>
+        <id>https://monkeylmj.github.io//post/path-tracing</id>
+        <link href="https://monkeylmj.github.io//post/path-tracing">
+        </link>
+        <updated>2018-04-08T12:10:38.000Z</updated>
+        <summary type="html"><![CDATA[<p>总结一下工作中遇到的一个“UI路径动画”的实现。效果如下图（对号的动画）</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>总结一下工作中遇到的一个“UI路径动画”的实现。效果如下图（对号的动画）</p>
+<!-- more -->
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1g0o7yykaxcg30a00a0tei.gif" alt="path tracing"></p>
+<h2 id="基本分析">基本分析</h2>
+<p>我们都知道，使用Android的Path Api可以很容易地画出一个对号（或者任意其他的不规则图形），实现这个效果的难点在于怎么以动画的形式逐渐地把这个路径给绘制出来。这里把路径(Path)从0到1绘制出来的过程称之为路径追踪（Path Tracing).</p>
+<p>[@Path的绘制API]</p>
+<pre><code class="language-java">//构造任意一个path
+Path path = new Path();
+path.moveTo(0, 0);
+path.lineTo(100,100);
+path.lineTo(100, 200);
+//画出path
+cavas.drawPath(path, paint);
+</code></pre>
+<h2 id="实现方案一pathmeasure">实现方案一（PathMeasure)</h2>
+<p>Android提供了PathMeasure类，用来进行路径的计算，可以用来实现路径追踪。</p>
+<p>创建PathMeasure：</p>
+<pre><code class="language-java">PathMeasure pathMeasure = new PathMeasure(Path path, boolean forceClosed);
+</code></pre>
+<p>或者也可以使用无参构造函数:</p>
+<pre><code class="language-java">PathMeasure pathMeasure = new PathMeasure();
+pathMeasure.setPath(Path path, boolean forceClosed);
+</code></pre>
+<p>第一个参数传入需要进行计算的路径，第二个参数指示是否将路径闭合。</p>
+<p>几个有用的API</p>
+<ol>
+<li>获取路径的像素长度：</li>
+</ol>
+<pre><code class="language-java">pathMeasure.getLength();
+</code></pre>
+<ol start="2">
+<li>获取路径的片段：</li>
+</ol>
+<pre><code class="language-java">pathMeasure.getSegment(float startD, float stopD, Path dst, boolean startWithMoveTo)
+</code></pre>
+<p>这个方法是绘制路径追踪动画的核心方法，通过这个方法可以获取整个Path你想要的片段，<strong>保持起点不变，终点一点点变长</strong>，就可以将路径一点一点地绘制出来了。</p>
+<p><em>参数介绍</em>：</p>
+<ul>
+<li>startD和stopD：开始距离和结束距离，控制截取的Path的内容。</li>
+<li>dst:将截取的路径保存到这个Path中，之后绘制这个Path即可。</li>
+<li>startWithMoveTo: 通常为true，表示对dst path先调用moveTo移动到起点的位置。</li>
+</ul>
+<p>相当于</p>
+<pre><code class="language-java">dst.moveTo(起点);
+dst.lineTo(终点);
+</code></pre>
+<p>如果设为false，经过测试，相当于:</p>
+<pre><code class="language-java">dst.lineTo(起点);
+dst.lineTo(终点);
+</code></pre>
+<p>一个Path如果直接lineTo某个点，隐式地在最开始添加了一个moveTo(0,0)，这种情况下获取的Path实际上起点连接到了(0,0)点。</p>
+<p>使用上面两个API，结合属性动画，实现路径追踪的效果：</p>
+<pre><code class="language-java">public class RouteTraceView extends View {
+
+    private Path mDstPath = new Path();
+    private float mEndDistance;
+    private PathMeasure mPathMeasure;
+
+    private Paint mPaint;
+
+    public RouteTraceView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    private void init() {
+        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint.setColor(Color.RED);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeWidth(10);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        mDstPath.reset();
+        mDstPath.lineTo(0, 0);
+        mPathMeasure.getSegment(0, mEndDistance, mDstPath, false);
+        canvas.drawPath(mDstPath, mPaint);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+
+        //要动态绘制出来的路径
+        Path path = new Path();
+        path.moveTo(0, 50);
+        path.lineTo(100, 100);
+        path.lineTo(100, 200);
+
+        mPathMeasure = new PathMeasure();
+        mPathMeasure.setPath(path, false);
+        final float length = mPathMeasure.getLength();
+
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
+        valueAnimator.setDuration(3000);
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                //动画的形式改变终点的距离
+                mEndDistance = (float) animation.getAnimatedValue() * length;
+                invalidate();
+            }
+        });
+        valueAnimator.start();
+    }
+}
+</code></pre>
+<p>是不是很简单，对于任意一个Path，都能通过这种改变终点距离的方式，一点点地追踪出来~</p>
+<h2 id="实现方案二dashpatheffect">实现方案二（DashPathEffect）</h2>
+<p>这种方式比较黑科技，算是奇技淫巧，用起来也是十分方便。</p>
+<p>Paint画笔有这样一个方法:</p>
+<pre><code class="language-java">mPaint.setPathEffect(PathEffect effect);
+</code></pre>
+<p>用来给画出的路径添加bling bling的特效。</p>
+<h3 id="patheffect的实现类有以下几个">PathEffect的实现类有以下几个：</h3>
+<ul>
+<li>CornerPathEffect</li>
+</ul>
+<p><img src="https://i.loli.net/2019/03/02/5c79ecb89dd62.jpg" alt=""></p>
+<ul>
+<li>DecretePathEffect  随机偏移的乱七八糟的效果</li>
+</ul>
+<p><img src="https://i.loli.net/2019/03/02/5c79ece126611.jpg" alt=""></p>
+<ul>
+<li>DashPathEffect</li>
+</ul>
+<p><img src="https://i.loli.net/2019/03/02/5c79ececdb632.jpg" alt=""></p>
+<ul>
+<li>PathDashPathEffect  用某个Path来绘制虚线</li>
+</ul>
+<p><img src="https://i.loli.net/2019/03/02/5c79ecf8ec9e2.jpg" alt=""></p>
+<ul>
+<li>SumPathEffect  组合两种Effect，分别按照两种PathEffect对路径进行绘制</li>
+</ul>
+<p><img src="https://i.loli.net/2019/03/02/5c79ed02256d4.jpg" alt=""></p>
+<ul>
+<li>
+<p>ComposePathEffect 组合两种Effect，先对目标路径应用第一个Effect，对改变后的Path再应用第二个Effect</p>
+<p><img src="https://i.loli.net/2019/03/02/5c79ed0b3da1b.jpg" alt=""></p>
+</li>
+</ul>
+<p>那这些PathEffect跟要实现的路径追踪有半毛钱关系吗？？？</p>
+<p>too young too simple！看我是怎么用DashPathEffect来装逼的！</p>
+<h3 id="看一下dashpatheffect的构造方法">看一下DashPathEffect的构造方法：</h3>
+<p>[@DashPathEffect构造方法]</p>
+<pre><code class="language-java">public DashPathEffect(float intervals[], float phase){}
+</code></pre>
+<ul>
+<li>intervals是一个数组，它的大小必须为偶数，最少两个。其中的元素按照【画线长度，空白长度，画线长度，空白长度….】排列。</li>
+</ul>
+<p>比如：</p>
+<pre><code class="language-java">PathEffect pathEffect = new DashPathEffect(new float[]{20, 10, 5, 10}, 0); 
+</code></pre>
+<p>就表示在路径上先画20px的线，再画10px的空白，再画5px的线，再画10px的空白，再循环以此类推。</p>
+<ul>
+<li>phase表示相位的偏移，经过测试<strong>phase为正时，虚线整体向起点方向偏移</strong>，比如上述代码中offset如果为20,则我们先看到的则是10px的空白了~</li>
+</ul>
+<h3 id="黑科技马上要来了">黑科技马上要来了！</h3>
+<p>思考下面这种写法：</p>
+<pre><code class="language-java">//要动态绘制出来的路径
+Path path = new Path();
+path.moveTo(0, 50);
+path.lineTo(100, 100);
+path.lineTo(100, 200);
+//拿到Path的长度
+PathMeasure pathMeasure = new PathMeasure();
+pathMeasure.setPath(path, false);
+float pathLength = pathMeasure.getLength();
+//特效
+DashPathEffect dashPathEffect = new DashPathEffect(new float[]{pathLength, pathLength}, 0);
+mPaint.setPathEffect(dashPathEffect);
+canvas.drawPath(path, mPaint);
+</code></pre>
+<p>其中intervals数组画线的长度和空白的长度都是path的长度。按照前面讲的，这样整个路径画出来，先是实线部分，就把路径填满了，这个路径一下子全画了出来。</p>
+<p>稍微修改一下，将phase改为pathLength：</p>
+<pre><code class="language-java">//特效
+DashPathEffect dashPathEffect = new DashPathEffect(new float[]{pathLength, pathLength}, pathLength);
+</code></pre>
+<p>按照前面讲的，虚线整体向起点移动pathLength个像素，这样实线部分完全移出了路径，隐藏起来了，显示的完全是空白的部分（长度也是pathLength）。</p>
+<p>到这里，完全隐藏和完全显示两个状态都有了，剩下的中间状态，通过一个属性动画将phase从pathLength变到0，整个路径就慢慢地显示出来了！！!</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li>http://www.curious-creature.com/2013/12/21/android-recipe-4-path-tracing/</li>
+<li>https://www.jianshu.com/p/81150d4740a4</li>
+<li>http://hencoder.com/ui-1-2/</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Andorid启动流程探索]]></title>
+        <id>https://monkeylmj.github.io//post/android-boot</id>
+        <link href="https://monkeylmj.github.io//post/android-boot">
+        </link>
+        <updated>2018-03-24T01:48:26.000Z</updated>
+        <summary type="html"><![CDATA[<p>最近在了解OTA升级方面的东西，学习的过程中，对Android的启动流程产生了很大的兴趣，很好奇为什么调用了<strong>RecoverySystem#installPackage</strong>方法之后手机重启就自动进入升级界面开始升级？Android整个系统的启动流程到底是怎样的。加上之前对bootloader、recovery等概念比较模糊,于是打算把这些东西梳理一下。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>最近在了解OTA升级方面的东西，学习的过程中，对Android的启动流程产生了很大的兴趣，很好奇为什么调用了<strong>RecoverySystem#installPackage</strong>方法之后手机重启就自动进入升级界面开始升级？Android整个系统的启动流程到底是怎样的。加上之前对bootloader、recovery等概念比较模糊,于是打算把这些东西梳理一下。</p>
+<!-- more -->
+<h2 id="android手机正常启动流程">Android手机正常启动流程</h2>
+<p>首先需要梳理一下Android手机正常启动的整个流程是怎样的，也就是当我们按下电源键一直到看到Launcher中间经历了什么！整个过程会从简表述，抛开其中很多不重要的细节。</p>
+<p>首先，操作系统的启动是一个比较矛盾的过程：必须先运行程序，然后计算机才能启动，但是计算机不启动就无法运行程序！ 早期采取的措施就是：将一小段程序固化在ROM中，计算机启动时，先去将它读入到内存中执行，进而将整个操作系统运行起来。在Windows上这段程序称之为BIOS（基本输入输出系统），对应的在Android中我们称之为BootLoader。</p>
+<p><strong>Android电源键按下时，首先从ROM的固定位置读取这段BootLoader程序（加载到RAM中）</strong>。BootLoader完成的工作大致有：</p>
+<p>初始化RAM、硬件，加载内核，跳转到内核中由其继续完成接下来的工作。</p>
+<p>在内核模块中，主要进行大部分硬件、驱动、文件系统的初始化，在最后创建<code>init</code>进程，这是Android中的第一个进程！ init进程中会执行init.rc脚本，其中最特别是创建了Zygote受精卵进程。在Zygote进程会预先加载App需要的一些资源和Android的framework class，之后其他App进程的创建都是直接fork Zygote进程，它们共用这些资源，节省开销！<em>（像Xposed框架就是在Zygote进程中插入hook代码，这样所有应用调用到framework api，都会执行到它的逻辑，因为共用了相同的内存资源）</em></p>
+<p>有一个例外是，SystemServer进程不是fork Zygote而来，SystemServer中完成了大量系统服务的启动，比如我们经常接触到的WindowMangerService、ActivityManagerService、PackageManagerService等等。在ActivityManagerServie启动之后，发出action为<code>Intent.CATEGORY_HOME</code>的intent，启动Launcher应用，至此Andorid系统启动完毕！</p>
+<p>正常启动的流程是不是非常简单，最后来总结一下：</p>
+<p><strong>按下电源键 —&gt;   cpu加载BootLoader到内存中执行   —&gt;  初始化硬件、进入内核模块   —&gt;  内核模块中加载驱动、文件系统、创建第一个进程Zygote —&gt; 创建一些系列的SystemServer，发送Home Intent  —&gt; Launcher启动</strong></p>
+<h2 id="recovery模式卡刷">Recovery模式（卡刷）</h2>
+<p>刷过机的同学可能都知道Recovery这个东西，一般是通过长按组合键（不同手机不同组合键）进入Recovery然后安装升级包之类的。那Recovery到底是个什么东东呢，怎么进入到Recovery模式中的。</p>
+<p>其实Recovery模式也是一个小的操作系统，只不过我们看到的只是一个小小的简单界面，而正常的Android系统是可以看到Launcher应用和各种其他应用。有点类似于windows上的U盘启动盘用来修复、更新主系统的。</p>
+<p><strong>那Recovery模式是怎么进去的呢？</strong></p>
+<p>上面讲过正常的流程中，BootLoader程序会初始化RAM、硬件，然后加载内核。如果我们在BootLoader启动的时候按下了对应的组合按键（比如音量-和电源键），BootLoader检测到之后同样会加载内核，但是此时加载的不是boot分区的内核，而是recovery分区的内核，在recovery分区的内核中初始化了一个简单的文件系统可供我们选择升级包进行升级。同时也会创建init进程执行自己的init脚本（源码<code>bootable/recovery/etc/init.rc</code>)，其中做了一件非常重要的事情，<strong>启动recovery服务</strong>（源码<code>bootable/recovery/recovery.cpp</code>），这个服务稍后会讲解一下做了什么事情。</p>
+<p>除了长按组合键这种进入Recovery模式的方式，还可以执行adb命令 <code>adb shell reboot recovery</code>，重启后进入Recovery模式。这种方式是怎么进入Recovery模式的呢？</p>
+<p>当BootLoader在执行过程中没有检测到任何组合按键，就会去MISC分区的启动控制信息块BCB（Bootloader Control Block）。BCB是一个结构体，存放着启动命令，根据这个命令，系统可以进入三种不同的启动模式</p>
+<p>[@BCB结构体]</p>
+<pre><code class="language-c">struct bootloader_message{
+     char command[32];  //存放不同的启动命令
+
+     char status[32];   //update-radio或update-hboot完成存放执行结果
+
+     char recovery[1024]; //存放在/cache/recovery/command中的命令
+};
+
+</code></pre>
+<p>当结构体中command为空时，进入正常的系统启动流程。</p>
+<p>当结构体中command字段为&quot;boot-recovery&quot;时，则进入Recovery模式，进行下一步的功能。</p>
+<p>所以，执行adb命令进入就是将&quot;boot-recovery&quot;这个字段写入了BCB的command字段中，然后重启系统。</p>
+<p>同样，在安装OTA升级包的时候通常会调用一个这样的接口<code>RecoverySystem#installPackage</code>，然后就会重启进入到升级页面。其实，在调用了这个接口之后，会将&quot;boot-recovery&quot;写入BCB的command字段， 然后重启设备。 这样，设备重启之后，读取到BCB的command跳转到Recovery中启动Recovery服务进行OTA包升级。</p>
+<p><strong>总结：</strong></p>
+<ol>
+<li>Recovery模式是一个mini的操作系统，主要启动自己的Recovery服务搞一些事情（具体下面细说）。</li>
+<li>进入Recovery模式有三种方式：长按组合键、adb reboot recovery、RecoverySystem#installPackage等API接口。 第一种方式是BootLoader执行过程中检测的。 后两种方式原理相同，都是修改BCB的内容，然后BootLoader读取跳转。</li>
+</ol>
+<h2 id="recovery服务的细节">Recovery服务的细节</h2>
+<p>上面介绍了进入Recovery的大概流程，提到了一个Recovery的服务，Recovery能提供的功能基本都在这个服务中定义，可以从源码的注释中可以详细了解到Recovery提供的全部服务：</p>
+<p>[@bootable/recovery/recovery.cpp]</p>
+<pre><code class="language-cpp">/* 
+ * The recovery tool communicates with the main system through /cache files. 
+ *   /cache/recovery/command - INPUT - command line for tool, one arg per line 
+ *   /cache/recovery/log - OUTPUT - combined log file from recovery run(s) 
+ *   /cache/recovery/intent - OUTPUT - intent that was passed in 
+ * 
+ * The arguments which may be supplied in the recovery.command file: 
+ *   --send_intent=anystring - write the text out to recovery.intent 
+ *   --update_package=path - verify install an OTA package file 
+ *   --wipe_data - erase user data (and cache), then reboot 
+ *   --wipe_cache - wipe cache (but not user data), then reboot 
+ *   --set_encrypted_filesystem=on|off - enables / diasables encrypted fs 
+ * 
+ * After completing, we remove /cache/recovery/command and reboot. 
+ * Arguments may also be supplied in the bootloader control block (BCB). 
+ * These important scenarios must be safely restartable at any point: 
+ * 
+ * FACTORY RESET 
+ * 1. user selects &quot;factory reset&quot; 
+ * 2. main system writes &quot;--wipe_data&quot; to /cache/recovery/command 
+ * 3. main system reboots into recovery 
+ * 4. get_args() writes BCB with &quot;boot-recovery&quot; and &quot;--wipe_data&quot; 
+ *    -- after this, rebooting will restart the erase -- 
+ * 5. erase_volume() reformats /data 
+ * 6. erase_volume() reformats /cache 
+ * 7. finish_recovery() erases BCB 
+ *    -- after this, rebooting will restart the main system -- 
+ * 8. main() calls reboot() to boot main system 
+ * 
+ * OTA INSTALL 
+ * 1. main system downloads OTA package to /cache/some-filename.zip 
+ * 2. main system writes &quot;--update_package=/cache/some-filename.zip&quot; 
+ * 3. main system reboots into recovery 
+ * 4. get_args() writes BCB with &quot;boot-recovery&quot; and &quot;--update_package=...&quot; 
+ *    -- after this, rebooting will attempt to reinstall the update -- 
+ * 5. install_package() attempts to install the update 
+ *    NOTE: the package install must itself be restartable from any point 
+ * 6. finish_recovery() erases BCB 
+ *    -- after this, rebooting will (try to) restart the main system -- 
+ * 7. ** if install failed ** 
+ *    7a. prompt_and_wait() shows an error icon and waits for the user 
+ *    7b; the user reboots (pulling the battery, etc) into the main system 
+ * 8. main() calls maybe_install_firmware_update() 
+ *    ** if the update contained radio/hboot firmware **: 
+ *    8a. m_i_f_u() writes BCB with &quot;boot-recovery&quot; and &quot;--wipe_cache&quot; 
+ *        -- after this, rebooting will reformat cache &amp; restart main system -- 
+ *    8b. m_i_f_u() writes firmware image into raw cache partition 
+ *    8c. m_i_f_u() writes BCB with &quot;update-radio/hboot&quot; and &quot;--wipe_cache&quot; 
+ *        -- after this, rebooting will attempt to reinstall firmware -- 
+ *    8d. bootloader tries to flash firmware 
+ *    8e. bootloader writes BCB with &quot;boot-recovery&quot; (keeping &quot;--wipe_cache&quot;) 
+ *        -- after this, rebooting will reformat cache &amp; restart main system -- 
+ *    8f. erase_volume() reformats /cache 
+ *    8g. finish_recovery() erases BCB 
+ *        -- after this, rebooting will (try to) restart the main system -- 
+ * 9. main() calls reboot() to boot main system 
+ * 
+ * SECURE FILE SYSTEMS ENABLE/DISABLE 
+ * 1. user selects &quot;enable encrypted file systems&quot; 
+ * 2. main system writes &quot;--set_encrypted_filesystems=on|off&quot; to 
+ *    /cache/recovery/command 
+ * 3. main system reboots into recovery 
+ * 4. get_args() writes BCB with &quot;boot-recovery&quot; and 
+ *    &quot;--set_encrypted_filesystems=on|off&quot; 
+ *    -- after this, rebooting will restart the transition -- 
+ * 5. read_encrypted_fs_info() retrieves encrypted file systems settings from /data 
+ *    Settings include: property to specify the Encrypted FS istatus and 
+ *    FS encryption key if enabled (not yet implemented) 
+ * 6. erase_volume() reformats /data 
+ * 7. erase_volume() reformats /cache 
+ * 8. restore_encrypted_fs_info() writes required encrypted file systems settings to /data 
+ *    Settings include: property to specify the Encrypted FS status and 
+ *    FS encryption key if enabled (not yet implemented) 
+ * 9. finish_recovery() erases BCB 
+ *    -- after this, rebooting will restart the main system -- 
+ * 10. main() calls reboot() to boot main system 
+ */
+</code></pre>
+<p>前面也说过，RecoverySystem#installPackage(path)将&quot;boot-recovery&quot;写入BCB的command字段，重启之后进入Recovery进行升级。 那Recovery是从哪里拿到升级包的路径呢?</p>
+<p>从注释中找到答案，Recovery服务通过/cache来和主系统交互（注释第一行）。执行RecoverySystem#installPackage(path)之后会将path路径写入*/cache/recovery/command*中(命令大概是这样:--update_package=[path])，然后Recovery服务读取到update package的命令之后就进行升级。 除了升级命令之外，常用的还有wipe data、wipe cache等命令，都是类似地将命令写入command文件中与Recovery服务交互。Android的设置中的恢复出厂设置其实就是写了一个wipe data命令到 command文件中，让Recovery服务启动时去重置数据。</p>
+<p>另外，Recovery服务在读取到 <em>/cache/recovery/command</em>中的命令之后，还会将此命令写入到BCB控制块的recovery字段，主要是用来防止在升级等过程中突然断电，再次重启之后仍然能够进入Recovery，继续之前的升级功能。在升级等操作完成之后会清空BCB和/cache/recovery/command，避免下次重启之后仍然进入Recovery， 这些都是一些细节问题。</p>
+<p>Recovery服务的具体流程可以看下面这张图：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c79ee0e42f07.png" alt=""></p>
+<p><strong>总结</strong></p>
+<p>1、Recovery服务通过/cache来和主系统交互，Andorid系统一般是将命令写入/cache/recovery/command中来和Recovery服务进行交互。</p>
+<p>2、Recovery服务能够做的功能有：工厂重置、OTA升级、安全文件系统的启用/禁用。</p>
+<h2 id="fastboot模式线刷">FastBoot模式（线刷）</h2>
+<p>Android启动除了正常模式和Recovery模式之外还有一个模式：FastBoot模式。</p>
+<p>Recovery模式下的刷机通常称之为”卡刷“，因为升级包必须放在Android文件系统中，然后进行升级。FastBoot模式下的刷机称之为”线刷“，必须通过手机和电脑建立USB连接进行分区的烧录。在某些情况下，比如手机刷成砖头无法进入Recovery模式，可以进入fastboot模式通过线刷来恢复。</p>
+<p>线刷一般也是通过组合按键进入，个人理解FastBoot模式是BootLoader程序的一部分，所以需要BootLoader支持。另外，也可以通过<code>adb reboot bootloader</code>进入FastBoot模式（如果成砖头了就只能组合按键进入了）。进入FastBoot模式之后，就可以通过在电脑端执行fastboot命令来将固件刷入到Android中。</p>
+<pre><code class="language-shell">fastboot devices
+fastboot flash bootloader u-boot.bin
+fastboot flash kernel uImage
+fastboot flash system system.img
+fastboot flash userdata userdata.img
+fastboot flash ramdisk ramdisk-uboot.img
+fastboot erase system #擦除system分区
+fastboot erase cache #擦除cache分区
+fastboot erase userdata #擦除userdata分区
+fastboot reboot
+...
+</code></pre>
+<h2 id="总结一下">总结一下</h2>
+<p>1、Android启动有三种情况：正常启动、进入Recovery模式、进入FastBoot模式。</p>
+<p>2、通过组合键或者adb命令进入Recovery模式，可以进行工厂重置、OTA升级、安全文件系统的启用/禁用等功能，其中Recovery服务通过/cache跟主系统通信，还涉及到一个BCB的概念。这种方式称之为”卡刷“。</p>
+<p>3、通过组合键或者adb命令进入FastBoot模式，通过与PC的连接进行固件烧录。这种方式称之为”线刷&quot;。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li>http://www.cnblogs.com/bluestorm/p/3340894.html</li>
+<li>https://juejin.im/entry/57664abedf0eea0062f4dea8</li>
+<li>https://juejin.im/entry/57382e1f2e958a0069cc8eae</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Android之Theme、Style、Attr]]></title>
+        <id>https://monkeylmj.github.io//post/android-theme-style-attr</id>
+        <link href="https://monkeylmj.github.io//post/android-theme-style-attr">
+        </link>
+        <updated>2017-11-09T11:15:01.000Z</updated>
+        <summary type="html"><![CDATA[<p>Android UI开发中经常会涉及到Theme、Style、Attr等概念，熟悉掌握这些概念能够帮助我们快速实现想要的UI效果，另外自定义View也经常需要使用到这些东西。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Android UI开发中经常会涉及到Theme、Style、Attr等概念，熟悉掌握这些概念能够帮助我们快速实现想要的UI效果，另外自定义View也经常需要使用到这些东西。</p>
+<!-- more -->
+<h2 id="概念">概念</h2>
+<h3 id="attr">Attr</h3>
+<p>基础单元，在Theme/Style/XML文件中作为Key使用，指定相应的value。</p>
+<p>定义方式：</p>
+<pre><code class="language-xml">&lt;attr name=&quot;borderWidth&quot; format=&quot;dimen&quot; /&gt;
+</code></pre>
+<p>使用方式:</p>
+<pre><code class="language-xml">&lt;View
+      android:layout_width=&quot;wrap_content&quot;
+      android:layout_height=&quot;wrap_content&quot;
+      app:borderWidth=&quot;10dp&quot; /&gt;
+</code></pre>
+<p>或</p>
+<pre><code class="language-java">int attr = R.attr.borderWidth;
+</code></pre>
+<p>可以将多个关联属性分组管理:</p>
+<pre><code class="language-java">&lt;declare-styleable name=&quot;MyButton&quot;&gt;
+    &lt;attr name=&quot;buttonWidth&quot; format=&quot;dimension&quot; /&gt;
+    &lt;attr name=&quot;buttonHeight&quot; format=&quot;dimension&quot; /&gt;
+    &lt;attr name=&quot;buttonColor&quot; format=&quot;color&quot; /&gt;
+&lt;/declare-styleable&gt;
+</code></pre>
+<p>通过以下方式可以访问到一个属性数组:</p>
+<pre><code class="language-java">int[] attrs = R.styleable.MyButton;
+</code></pre>
+<p>###Style</p>
+<p>样式集合，将多个属性放在一起，达到复用的目的。</p>
+<p>例如：</p>
+<pre><code class="language-xml">&lt;Button
+        android:id=&quot;@+id/button&quot;
+        android:layout_width=&quot;wrap_content&quot;
+        android:layout_height=&quot;wrap_content&quot;
+        android:gravity=&quot;center&quot;
+        android:textSize=&quot;20sp&quot;
+        android:textColor=&quot;#FF000&quot; /&gt;
+</code></pre>
+<p>抽离出一些公共的属性作为Style:</p>
+<pre><code class="language-xml">&lt;style name=&quot;myButtonStyle&quot;&gt;
+        &lt;item name=&quot;android:layout_width&quot;&gt;wrap_content&lt;/item&gt;
+        &lt;item name=&quot;android:layout_height&quot;&gt;wrap_content&lt;/item&gt;
+        &lt;item name=&quot;android:gravity&quot;&gt;center&lt;/item&gt;
+        &lt;item name=&quot;android:textColor&quot;&gt;#FF0000&lt;/item&gt;
+        &lt;item name=&quot;android:textSize&quot;&gt;20sp&lt;/item&gt;
+&lt;/style&gt;
+</code></pre>
+<p>引用Style:</p>
+<pre><code class="language-xml">&lt;Button
+        android:id=&quot;@+id/button&quot;
+        style=&quot;@style/myButtonStyle&quot; /&gt;
+</code></pre>
+<h3 id="theme">Theme</h3>
+<p>主题，相当于一个大的Style，作用在应用的层次。其中会包含一些Window相关的属性，比如:</p>
+<pre><code class="language-xml">&lt;item name=&quot;windowBackground&quot;&gt;?attr/colorBackground&lt;/item&gt;
+&lt;item name=&quot;windowClipToOutline&quot;&gt;true&lt;/item&gt;
+&lt;item name=&quot;windowFrame&quot;&gt;@null&lt;/item&gt;
+&lt;item name=&quot;windowNoTitle&quot;&gt;false&lt;/item&gt;
+&lt;item name=&quot;windowFullscreen&quot;&gt;false&lt;/item&gt;
+&lt;item name=&quot;windowOverscan&quot;&gt;false&lt;/item&gt;
+&lt;item name=&quot;windowIsFloating&quot;&gt;false&lt;/item&gt;
+</code></pre>
+<p>一些组件(Dialog，View等）的统一样式，比如：</p>
+<pre><code class="language-xml">&lt;item name=&quot;dialogTheme&quot;&gt;@style/ThemeOverlay.Material.Dialog&lt;/item&gt;
+&lt;item name=&quot;dialogTitleDecorLayout&quot;&gt;@layout/dialog_title_material&lt;/item&gt;
+&lt;item name=&quot;dialogPreferredPadding&quot;&gt;@dimen/dialog_padding_material&lt;/item&gt;
+&lt;item name=&quot;searchViewStyle&quot;&gt;@style/Widget.Material.SearchView&lt;/item&gt;
+&lt;item name=&quot;searchDialogTheme&quot;&gt;@style/Theme.Material.SearchBar&lt;/item&gt;
+&lt;item name=&quot;numberPickerStyle&quot;&gt;@style/Widget.Material.NumberPicker&lt;/item&gt;
+&lt;item name=&quot;calendarViewStyle&quot;&gt;@style/Widget.Material.CalendarView&lt;/item&gt;
+&lt;item name=&quot;timePickerStyle&quot;&gt;@style/Widget.Material.TimePicker&lt;/item&gt;
+&lt;item name=&quot;timePickerDialogTheme&quot;&gt;?attr/dialogTheme&lt;/item&gt;
+&lt;item name=&quot;datePickerStyle&quot;&gt;@style/Widget.Material.DatePicker&lt;/item&gt;
+&lt;item name=&quot;datePickerDialogTheme&quot;&gt;?attr/dialogTheme&lt;/item&gt;
+</code></pre>
+<p>主题相当于应用的一套皮肤，这套皮肤制定了各个组件的显示风格，使之具有统一性。我们熟知的有<code>Theme.Holo</code>,<code>Theme.Material</code>等等。</p>
+<h2 id="style-theme作用在view上的流程">Style、Theme作用在View上的流程</h2>
+<p>**问题：**既然使用Style、Theme都可以给View一个样式，那么他们是怎样作用在View上的呢？他们两个的优先级又是怎么样的。</p>
+<p>这里说一下优先级，日常的开发中应该都能够得出一个经验：<strong>layout布局文件中属性 &gt; style样式 &gt; Theme主题</strong></p>
+<p>拿一个Button举例，如果在布局文件中给Button设置了<code>android:background=&quot;XXX&quot;</code> 或者抽离到Style中再应用，那么Button就显示了我们指定的背景。 如果没有设置背景属性，Button仍然是有一个背景的。这个默认背景就是应用到了Theme中的样式，并且对于不同的主题有不同的样式~</p>
+<p>然后重点来说一下样式是怎样作用到View上的，对这个过程进行深入的理解。同样拿一个Android的View来举例：<code>TextView</code>，看看它是怎么应用样式的。</p>
+<p>[@TextView] 构造方法:</p>
+<pre><code class="language-java">public TextView(Context context) {
+        this(context, null);
+}
+
+public TextView(Context context, @Nullable AttributeSet attrs) {
+        this(context, attrs, com.android.internal.R.attr.textViewStyle);
+}
+
+public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        this(context, attrs, defStyleAttr, 0);
+}
+
+@SuppressWarnings(&quot;deprecation&quot;)
+public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+}
+</code></pre>
+<p>我们继承Android的View来自定义View时，通过会被要求继承四个的构造方法中的一个。对于XML中布局的View，被调用2个参数的构造方法来new一个实例，其中attrs就是布局的属性集，其中包含了这个View的所有样式。</p>
+<p>TextView所有的构造函数最终都指向最长参数的构造函数：</p>
+<pre><code class="language-java">public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+
+        final Resources.Theme theme = context.getTheme();
+        TypedArray a = theme.obtainStyledAttributes(attrs,
+                com.android.internal.R.styleable.TextViewAppearance, defStyleAttr, defStyleRes);
+        TypedArray appearance = null;
+        int ap = a.getResourceId(
+                com.android.internal.R.styleable.TextViewAppearance_textAppearance, -1);
+        a.recycle();
+        if (ap != -1) {
+            appearance = theme.obtainStyledAttributes(
+                    ap, com.android.internal.R.styleable.TextAppearance);
+        }
+        if (appearance != null) {
+            int n = appearance.getIndexCount();
+            for (int i = 0; i &lt; n; i++) {
+                int attr = appearance.getIndex(i);
+
+                switch (attr) {
+                case com.android.internal.R.styleable.TextAppearance_textColorHighlight:
+                    textColorHighlight = appearance.getColor(attr, textColorHighlight);
+                    break;
+
+                case com.android.internal.R.styleable.TextAppearance_textColor:
+                    textColor = appearance.getColorStateList(attr);
+                    break;
+                //省略大量Case
+            }
+
+            appearance.recycle();
+        }
+
+        a = theme.obtainStyledAttributes(attrs, com.android.internal.R.styleable.TextView, defStyleAttr, defStyleRes);
+
+        int n = a.getIndexCount();
+        for (int i = 0; i &lt; n; i++) {
+            int attr = a.getIndex(i);
+
+            switch (attr) {
+            case com.android.internal.R.styleable.TextView_editable:
+                editable = a.getBoolean(attr, editable);
+                break;
+
+            case com.android.internal.R.styleable.TextView_inputMethod:
+                inputMethod = a.getText(attr);
+                break;
+            //省略大量Case
+        }
+}
+</code></pre>
+<p>其中最核心的一个方法是<code>context.obtainStyledAttributes(AttributeSet, int[] attrs, defStyleAttr, defStyleRes)</code>。</p>
+<p><strong>AttributeSet</strong> : layout文件中解析出来的属性对象集合，包含我们的样式。</p>
+<p><strong>attrs</strong>: 前面讲到的一组相关联的属性集合。<code>com.android.internal.R.styleable.TextView</code> 可在AOSP中查看具体有哪些属性，这里列出一部分：</p>
+<pre><code class="language-xml"> &lt;declare-styleable name=&quot;TextView&quot;&gt;
+        &lt;!-- Determines the minimum type that getText() will return.
+             The default is &quot;normal&quot;.
+             Note that EditText and LogTextBox always return Editable,
+             even if you specify something less powerful here. --&gt;
+        &lt;attr name=&quot;bufferType&quot;&gt;
+            &lt;!-- Can return any CharSequence, possibly a
+             Spanned one if the source text was Spanned. --&gt;
+            &lt;enum name=&quot;normal&quot; value=&quot;0&quot; /&gt;
+            &lt;!-- Can only return Spannable. --&gt;
+            &lt;enum name=&quot;spannable&quot; value=&quot;1&quot; /&gt;
+            &lt;!-- Can only return Spannable and Editable. --&gt;
+            &lt;enum name=&quot;editable&quot; value=&quot;2&quot; /&gt;
+        &lt;/attr&gt;
+        &lt;!-- Text to display. --&gt;
+        &lt;attr name=&quot;text&quot; format=&quot;string&quot; localization=&quot;suggested&quot; /&gt;
+        &lt;!-- Hint text to display when the text is empty. --&gt;
+        &lt;attr name=&quot;hint&quot; format=&quot;string&quot; /&gt;
+        &lt;!-- Text color. --&gt;
+        &lt;attr name=&quot;textColor&quot; /&gt;
+        &lt;!-- Color of the text selection highlight. --&gt;
+        &lt;attr name=&quot;textColorHighlight&quot; /&gt;
+        &lt;!-- Color of the hint text. --&gt;
+        &lt;attr name=&quot;textColorHint&quot; /&gt;
+        &lt;!-- Base text color, typeface, size, and style. --&gt;
+        &lt;attr name=&quot;textAppearance&quot; /&gt;
+        &lt;!-- Size of the text. Recommended dimension type for text is &quot;sp&quot; for scaled-pixels (example: 15sp). --&gt;
+        &lt;attr name=&quot;textSize&quot; /&gt;
+        &lt;!-- Sets the horizontal scaling factor for the text. --&gt;
+        &lt;attr name=&quot;textScaleX&quot; format=&quot;float&quot; /&gt;
+   
+   &lt;!--省略不少--&gt;
+</code></pre>
+<p><strong>defStyleAttr</strong> ： 一个指定的属性资源。在这里为 <code>com.android.internal.R.attr.textViewStyle</code>（2个参数的构造方法传进来的）。可以在<strong>Theme</strong>中找到此属性对应的值，对应了一个Style.</p>
+<pre><code class="language-xml">&lt;item name=&quot;textViewStyle&quot;&gt;@style/Widget.Material.Light.TextView&lt;/item&gt;
+</code></pre>
+<p><strong>defStyleRes</strong>:  Style资源，也是一组样式。</p>
+<p>以上，<code>context.obtainStyledAttributes</code>  获取View样式的过程为：</p>
+<ol>
+<li>
+<p>从AttributeSet样式集合中寻找<code>int[] attrs</code>指定的几个属性对应的值。例如：xml中指定了<code>android:textColor=&quot;#ff0000&quot;</code>， attrs属性组中定义有<code>textColor</code>这个属性，则提取出来。</p>
+</li>
+<li>
+<p>如果AttributeSet中没有要提取的样式（比如，以上没有指定textColor样式），则根据<strong>defStyleAttr</strong>来从指定的<strong>Theme</strong>中寻找样式。比如：Material主题中指定了:</p>
+</li>
+</ol>
+<pre><code class="language-xml">&lt;item name=&quot;textViewStyle&quot;&gt;@style/Widget.Material.Light.TextView&lt;/item&gt;
+</code></pre>
+<p>则进一步去<code>@style/Widget.Material.Light.TextView</code> 中寻找想要的样式。</p>
+<ol start="3">
+<li>如果主题中仍然找不到要提取的样式。 则去<strong>defStyleRes</strong>(我们指定的Style样式中)寻找。</li>
+</ol>
+<h2 id="应用">应用</h2>
+<p>经过上面的分析，已经可以知道Theme是怎样应用默认样式到View上的了，因此我们就可以修改这种默认样式来定制我们自己的主题。比如我们想让默认的Button控件字体为30sp。</p>
+<pre><code class="language-xml">&lt;style name=&quot;CustomTheme&quot; parent=&quot;@android:style/Theme.Material&quot;&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/CustomButtonStyle&lt;/item&gt;
+&lt;/style&gt;
+    
+&lt;style name=&quot;CustomButtonStyle&quot; parent=&quot;@android:style/Widget.Button&quot;&gt;
+    &lt;item name=&quot;android:textSize&quot;&gt;30sp&lt;/item&gt;
+&lt;/style&gt;
+</code></pre>
+<p>首先，自定义<strong>CustomTheme</strong>继承Andorid的Theme，复写<strong>buttonStyle</strong>指向我们自定义的样式。</p>
+<p>其次，定义我们自己的Button样式，可以继承原来的样式，复写textSize属性，来修改默认的Button字体大小。</p>
+<h2 id="另外">另外</h2>
+<p>前面提到<strong>Theme</strong>中会有一些Window的样式，我们可以复写来实现一些window的效果.比如</p>
+<pre><code class="language-xml">&lt;style name=&quot;CustomTheme&quot; parent=&quot;@android:style/Theme.Material&quot;&gt;
+   &lt;item name=&quot;android:windowFullscreen&quot;&gt;true&lt;/item&gt; &lt;!--全屏--&gt;
+   &lt;item name=&quot;android:statusBarColor&quot;&gt;#FF0000&lt;/item&gt; &lt;!--修改状态栏的颜色--&gt;
+   &lt;item name=&quot;windowNoTitle&quot;&gt;false&lt;/item&gt; &lt;!--无标题--&gt;
+&lt;/style&gt;
+</code></pre>
+<p>这些属性在PhoneWindow的generateLayout方法中被解析和应用。</p>
+<h2 id="相关资料">相关资料</h2>
+<ul>
+<li>Android源码分析</li>
+<li><a href="http://www.jianshu.com/p/d147608dc27b">Android沉浸状态栏的实现</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Android按键事件分发机制]]></title>
+        <id>https://monkeylmj.github.io//post/keyevent-dispatch</id>
+        <link href="https://monkeylmj.github.io//post/keyevent-dispatch">
+        </link>
+        <updated>2017-10-22T22:51:09.000Z</updated>
+        <summary type="html"><![CDATA[<p>本文总结一下Android中按键事件的分发机制。按键事件分发跟触摸事件分发类似，比触摸事件分发更加简单。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本文总结一下Android中按键事件的分发机制。按键事件分发跟触摸事件分发类似，比触摸事件分发更加简单。</p>
+<!-- more -->
+<h2 id="事件分发的根源">事件分发的根源</h2>
+<p>首先，回顾一下触摸事件分发的大致流程:</p>
+<p>[@ViewGroup]</p>
+<pre><code class="language-java">public boolean dispatchTouchEvent(MotionEvent ev){
+  boolean consume = false;
+  if(onInterceptTouchEvent(ev)){
+      consume = onTouchEvent(ev);
+  }else{
+      consume = child.dispatchTouchEvent(ev);
+  }
+  return consume;
+}
+</code></pre>
+<p>那么最开始的<code>dispatchTouchEvent</code>是哪里调用的，事件的根源是从哪里传上来的？</p>
+<p>下图展示了Framework中事件的根源：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a18db47dba.png" alt=""></p>
+<p>其中&quot;一系列的InputStage&quot;用到了责任链模式对事件依次进行处理。</p>
+<p>InputStage责任链的创建在ViewRootImpl中：</p>
+<p>[@ViewRootImpl#setView]</p>
+<pre><code class="language-java">mSyntheticInputStage = new SyntheticInputStage();
+InputStage viewPostImeStage = new ViewPostImeInputStage(mSyntheticInputStage);
+InputStage nativePostImeStage = new NativePostImeInputStage(viewPostImeStage,
+                        &quot;aq:native-post-ime:&quot; + counterSuffix);
+InputStage earlyPostImeStage = new EarlyPostImeInputStage(nativePostImeStage);
+InputStage imeStage = new ImeInputStage(earlyPostImeStage,
+                        &quot;aq:ime:&quot; + counterSuffix);
+InputStage viewPreImeStage = new ViewPreImeInputStage(imeStage);
+InputStage nativePreImeStage = new NativePreImeInputStage(viewPreImeStage,
+                        &quot;aq:native-pre-ime:&quot; + counterSuffix);
+
+mFirstInputStage = nativePreImeStage;
+mFirstPostImeInputStage = earlyPostImeStage;
+</code></pre>
+<p>主要是ViewPostImeInputStage中对事件进行处理：</p>
+<p>[@ViewPostImeInputStage]</p>
+<pre><code class="language-java">protected int onProcess(QueuedInputEvent q) {
+            if (q.mEvent instanceof KeyEvent) {
+                return processKeyEvent(q);
+            } else {
+                // If delivering a new non-key event, make sure the window is
+                // now allowed to start updating.
+                handleDispatchWindowAnimationStopped();
+                final int source = q.mEvent.getSource();
+                if ((source &amp; InputDevice.SOURCE_CLASS_POINTER) != 0) {
+                    return processPointerEvent(q);
+                } else if ((source &amp; InputDevice.SOURCE_CLASS_TRACKBALL) != 0) {
+                    return processTrackballEvent(q);
+                } else {
+                    return processGenericMotionEvent(q);
+                }
+            }
+        }
+</code></pre>
+<p>这里根据InputEvent的类型进行不同的处理，如果是<code>KeyEvent</code>，进入<code>processKeyEvent</code>流程；否则如果是<code>MotionEvent</code>，根据具体的事件源来进入不同的流程。其中，触摸事件的分发就是进入到<code>processPointerEvent</code>中处理，进去再走几步就到了我们熟悉的<code>dispatchTouchEvent</code>。</p>
+<p>我们继续跟进<code>processKeyEvent</code>:</p>
+<p>[@ViewPostImeInputStage]</p>
+<pre><code class="language-java">private int processKeyEvent(QueuedInputEvent q) {
+            final KeyEvent event = (KeyEvent)q.mEvent;
+
+            // Deliver the key to the view hierarchy.
+            if (mView.dispatchKeyEvent(event)) {
+                return FINISH_HANDLED;
+            }
+
+            // Handle automatic focus changes.
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                int direction = 0;
+                switch (event.getKeyCode()) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_LEFT;
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_RIGHT;
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_UP;
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_DOWN;
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_TAB:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_FORWARD;
+                        } else if (event.hasModifiers(KeyEvent.META_SHIFT_ON)) {
+                            direction = View.FOCUS_BACKWARD;
+                        }
+                        break;
+                }
+                if (direction != 0) {
+                    View focused = mView.findFocus();
+                    if (focused != null) {
+                        View v = focused.focusSearch(direction);
+                        if (v != null &amp;&amp; v != focused) {
+                            // do the math the get the interesting rect
+                            // of previous focused into the coord system of
+                            // newly focused view
+                            focused.getFocusedRect(mTempRect);
+                            if (mView instanceof ViewGroup) {
+                                ((ViewGroup) mView).offsetDescendantRectToMyCoords(
+                                        focused, mTempRect);
+                                ((ViewGroup) mView).offsetRectIntoDescendantCoords(
+                                        v, mTempRect);
+                            }
+                            if (v.requestFocus(direction, mTempRect)) {
+                                playSoundEffect(SoundEffectConstants
+                                        .getContantForFocusDirection(direction));
+                                return FINISH_HANDLED;
+                            }
+                        }
+
+                        // Give the focused view a last chance to handle the dpad key.
+                        if (mView.dispatchUnhandledMove(focused, direction)) {
+                            return FINISH_HANDLED;
+                        }
+                    } else {
+                        // find the best view to give focus to in this non-touch-mode with no-focus
+                        View v = focusSearch(null, direction);
+                        if (v != null &amp;&amp; v.requestFocus(direction)) {
+                            return FINISH_HANDLED;
+                        }
+                    }
+                }
+            }
+            return FORWARD;
+        }
+</code></pre>
+<p>可以看到，大概的过程分为两步：</p>
+<ol>
+<li>
+<p>将KeyEvent传入View树中进行分发，如果return true，表示消费了按键事件，返回 <em>FINISH_HANDLED</em>，结束。</p>
+</li>
+<li>
+<p>如果第1步返回false，表示View树中没有能力处理此按键事件，则processKeyEvent中根据此按键来进行焦点的改变。</p>
+</li>
+</ol>
+<p>下面就分两块来详解这两个过程中的具体细节。</p>
+<h2 id="按键事件分发的流程">按键事件分发的流程</h2>
+<p>上面的第一步调用了<code>mView.dispatchKeyEvent(event)</code>来开始事件分发，其中mView是整个View树的最根布局，也就是DecorView。所以进入DecorView的源码看一下：</p>
+<p>[@DecorView]</p>
+<pre><code class="language-java">public boolean dispatchKeyEvent(KeyEvent event) {
+            final int keyCode = event.getKeyCode();
+            final int action = event.getAction();
+            final boolean isDown = action == KeyEvent.ACTION_DOWN;
+			//...省略部分无关代码
+            if (!isDestroyed()) {
+                final Callback cb = getCallback();
+                final boolean handled = cb != null &amp;&amp; mFeatureId &lt; 0 ? cb.dispatchKeyEvent(event)
+                        : super.dispatchKeyEvent(event);
+                if (handled) {
+                    return true;
+                }
+            }
+  			 return isDown ? PhoneWindow.this.onKeyDown(mFeatureId, event.getKeyCode(), event)
+                    : PhoneWindow.this.onKeyUp(mFeatureId, event.getKeyCode(), event);
+        }
+</code></pre>
+<p>通过Callback，进入cb.dispatchKeyEvent(event)，这里的Callback就是<code>Activity</code>，<code>Activity</code>实现了Callback接口。通过这儿将事件传到了Activity当中，所以我们可以在Activity中监听到<code>onTouchEvent</code>、<code>onKeyDown</code>、<code>onKeyUp</code>等事件~</p>
+<p>[@Activity]</p>
+<pre><code class="language-java">public boolean dispatchKeyEvent(KeyEvent event) {
+        onUserInteraction();
+
+        // Let action bars open menus in response to the menu key prioritized over
+        // the window handling it
+        if (event.getKeyCode() == KeyEvent.KEYCODE_MENU &amp;&amp;
+                mActionBar != null &amp;&amp; mActionBar.onMenuKeyEvent(event)) {
+            return true;
+        }
+
+        Window win = getWindow();
+        if (win.superDispatchKeyEvent(event)) {
+            return true;
+        }
+        View decor = mDecor;
+        if (decor == null) decor = win.getDecorView();
+        return event.dispatch(this, decor != null
+                ? decor.getKeyDispatcherState() : null, this);
+    }
+</code></pre>
+<p>这里通过Window.superDispatchKeyEvent又将事件传到DecorView处理.</p>
+<p>[@PhoneWindow]</p>
+<pre><code class="language-java">@Override
+public boolean superDispatchKeyEvent(KeyEvent event) {
+    return mDecor.superDispatchKeyEvent(event);
+}
+</code></pre>
+<p>[@DecorView]</p>
+<pre><code class="language-java">public boolean superDispatchKeyEvent(KeyEvent event) {
+     //省略.
+     return super.dispatchKeyEvent(event);
+}
+</code></pre>
+<p>接下来调用super.dispatchKeyEvent进入ViewGroup中，开始真正的事件分发了！</p>
+<p>首先看一下按键事件分发的大致流程，非常简单：</p>
+<p>[@ViewGroup]</p>
+<pre><code class="language-java">@Override
+public boolean dispatchKeyEvent(KeyEvent event) {
+  		//简化过后的逻辑
+     if (super.dispatchKeyEvent(event)) {
+         return true;
+      } else if (mFocused.dispatchKeyEvent(event)) {
+         return true;
+     }
+     return false;
+}
+</code></pre>
+<p>在ViewGroup进行分发的逻辑为：</p>
+<p>先把事件交给自己的dispatchKeyEvent进行处理，如果消费了，结束。否则将事件传递给mFocused(含有焦点的子View)，继续分发。</p>
+<blockquote>
+<p>关于mFocused的赋值，可以从<code>View.reqeustFocus()</code>方法追踪到<code>ViewGroup.reqeustChildFocus</code>方法</p>
+<p>[@ViewGroup]</p>
+<pre><code class="language-java">public void requestChildFocus(View child, View focused) {
+        if (DBG) {
+            System.out.println(this + &quot; requestChildFocus()&quot;);
+        }
+        if (getDescendantFocusability() == FOCUS_BLOCK_DESCENDANTS) {
+            return;
+        }
+
+        // Unfocus us, if necessary
+        super.unFocus(focused);
+
+        // We had a previous notion of who had focus. Clear it.
+        if (mFocused != child) {
+            if (mFocused != null) {
+                mFocused.unFocus(focused);
+            }
+
+            mFocused = child;
+        }
+        if (mParent != null) {
+            mParent.requestChildFocus(this, focused);
+        }
+    }
+</code></pre>
+<p>当一个View请求焦点之后，依次向父View(mParent)调用，给mFocused赋值。这样便可以从最外层的ViewGroup按照mFocused变量遍历找到获取焦点的View.</p>
+</blockquote>
+<p><em>另外，这里mFocused可以类比触摸事件分发中根据触摸位置定位到的targetView</em></p>
+<p>[@View]</p>
+<pre><code class="language-java">public boolean dispatchKeyEvent(KeyEvent event) {
+        // Give any attached key listener a first crack at the event.
+        //noinspection SimplifiableIfStatement
+        ListenerInfo li = mListenerInfo;
+        if (li != null &amp;&amp; li.mOnKeyListener != null &amp;&amp; (mViewFlags &amp; ENABLED_MASK) == ENABLED
+                &amp;&amp; li.mOnKeyListener.onKey(this, event.getKeyCode(), event)) {
+            return true;
+        }
+
+        if (event.dispatch(this, mAttachInfo != null
+                ? mAttachInfo.mKeyDispatchState : null, this)) {
+            return true;
+        }
+        return false;
+    }
+</code></pre>
+<p>可以看出这里有两种方式消费一个事件。</p>
+<ol>
+<li>
+<p>setOnKeyListener，并且返回true，消费事件。</p>
+</li>
+<li>
+<p>event.dispatch()返回true消费事件。这里里面其实是调用了<code>onKeyDown</code>和<code>onKeyUp</code>等方法。所以可以复写View的onKeyDown、onKeyUp等方法，来消费一个按键事件。</p>
+</li>
+</ol>
+<p>来看一下View中的<code>onKeyUp</code>的默认实现：</p>
+<p>[@View]</p>
+<pre><code class="language-java">public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (KeyEvent.isConfirmKey(keyCode)) {
+            if ((mViewFlags &amp; ENABLED_MASK) == DISABLED) {
+                return true;
+            }
+            if ((mViewFlags &amp; CLICKABLE) == CLICKABLE &amp;&amp; isPressed()) {
+                setPressed(false);
+
+                if (!mHasPerformedLongPress) {
+                    // This is a tap, so remove the longpress check
+                    removeLongPressCallback();
+                    return performClick();
+                }
+            }
+        }
+        return false;
+    }
+</code></pre>
+<p>可以看出View会默认消费<strong>确认键</strong>，其他类型的按键一律不消费。</p>
+<p><strong>总结</strong></p>
+<p>默认情况下，KeyEvent事件从DecorView一层层传递到focused view。对于确认键，则触发click，消费掉，结束。对于其他按键不处理，最终返回false，进行下一步的处理。</p>
+<p>其中，我们可以setOnKeyListener或者复写onKeyDown、onKeyUp等方法返回true，来消费事件，阻止下一步的寻找焦点处理。</p>
+<p>对于没有消费的事件，来看一下是如何进行下一步处理的！</p>
+<h2 id="焦点自动处理流程">焦点自动处理流程</h2>
+<p>再贴一遍ViewPostImeInputStage的按键处理逻辑：</p>
+<p>[@ViewPostImeInputStage]</p>
+<pre><code class="language-java">private int processKeyEvent(QueuedInputEvent q) {
+            final KeyEvent event = (KeyEvent)q.mEvent;
+
+            // 1.Deliver the key to the view hierarchy.
+            if (mView.dispatchKeyEvent(event)) {
+                return FINISH_HANDLED;
+            }
+
+            // 2.Handle automatic focus changes.
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                int direction = 0;
+                switch (event.getKeyCode()) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_LEFT;
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_RIGHT;
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_UP;
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_DOWN;
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_TAB:
+                        if (event.hasNoModifiers()) {
+                            direction = View.FOCUS_FORWARD;
+                        } else if (event.hasModifiers(KeyEvent.META_SHIFT_ON)) {
+                            direction = View.FOCUS_BACKWARD;
+                        }
+                        break;
+                }
+                if (direction != 0) {
+                    View focused = mView.findFocus();
+                    if (focused != null) {
+                        View v = focused.focusSearch(direction);
+                        if (v != null &amp;&amp; v != focused) {
+                            // do the math the get the interesting rect
+                            // of previous focused into the coord system of
+                            // newly focused view
+                            focused.getFocusedRect(mTempRect);
+                            if (mView instanceof ViewGroup) {
+                                ((ViewGroup) mView).offsetDescendantRectToMyCoords(
+                                        focused, mTempRect);
+                                ((ViewGroup) mView).offsetRectIntoDescendantCoords(
+                                        v, mTempRect);
+                            }
+                            if (v.requestFocus(direction, mTempRect)) {
+                                playSoundEffect(SoundEffectConstants
+                                        .getContantForFocusDirection(direction));
+                                return FINISH_HANDLED;
+                            }
+                        }
+                    } else {
+                        // find the best view to give focus to in this non-touch-mode with no-focus
+                        View v = focusSearch(null, direction);
+                        if (v != null &amp;&amp; v.requestFocus(direction)) {
+                            return FINISH_HANDLED;
+                        }
+                    }
+                }
+            }
+            return FORWARD;
+        }
+</code></pre>
+<p>第1步事件在View树中的分发我们已经分析过，对于没有处理的事件进入到<code>processKeyEvent</code>的第2步—— 焦点寻找。</p>
+<p>首先，将KeyEvent转换为方向常量<code>View.FOCUS_LEFT</code>、<code>View.FOCUS_RIGHT</code>...</p>
+<p>然后核心逻辑如下：</p>
+<pre><code class="language-java">if (direction != 0) {
+            View focused = mView.findFocus();
+            if (focused != null) {
+                View v = focused.focusSearch(direction);
+                if (v != null &amp;&amp; v != focused) {
+                    // do the math the get the interesting rect
+                    // of previous focused into the coord system of
+                    // newly focused view
+                    focused.getFocusedRect(mTempRect);
+                    if (mView instanceof ViewGroup) {
+                        ((ViewGroup) mView).offsetDescendantRectToMyCoords(
+                                focused, mTempRect);
+                        ((ViewGroup) mView).offsetRectIntoDescendantCoords(
+                                v, mTempRect);
+                    }
+                    if (v.requestFocus(direction, mTempRect)) {
+                        playSoundEffect(SoundEffectConstants
+                                .getContantForFocusDirection(direction));
+                        return FINISH_HANDLED;
+                    }
+                }
+            } else {
+                // find the best view to give focus to in this non-touch-mode with no-focus
+                View v = focusSearch(null, direction);
+                if (v != null &amp;&amp; v.requestFocus(direction)) {
+                    return FINISH_HANDLED;
+                }
+            }
+   }
+</code></pre>
+<p>关键代码为<code>focused.focusSearch(direction)</code> , 该方法返回下一个应该获取焦点的View。</p>
+<p>进去看下：</p>
+<p>[@View]</p>
+<pre><code class="language-java">public View focusSearch(@FocusRealDirection int direction) {
+    if (mParent != null) {
+        return mParent.focusSearch(this, direction);
+    } else {
+        return null;
+    }
+}
+</code></pre>
+<p>[@ViewGroup]</p>
+<pre><code class="language-java">public View focusSearch(View focused, int direction) {
+        if (isRootNamespace()) {
+            // root namespace means we should consider ourselves the top of the
+            // tree for focus searching; otherwise we could be focus searching
+            // into other tabs.  see LocalActivityManager and TabHost for more info
+            return FocusFinder.getInstance().findNextFocus(this, focused, direction);
+        } else if (mParent != null) {
+            return mParent.focusSearch(focused, direction);
+        }
+        return null;
+    }
+</code></pre>
+<p>不断地调用Parent的focusSearch，直到isRootNamespace(DecorView)。执行<code>FocusFinder.getInstance().findNextFocus()</code>开始真正地寻找下一个焦点。</p>
+<p>FocusFinder是一个单例，寻找焦点的逻辑也非常简单：</p>
+<p>[@FocusFinder]</p>
+<pre><code class="language-java">private View findNextFocus(ViewGroup root, View focused, Rect focusedRect, int direction) {
+        View next = null;
+        if (focused != null) {
+            //1.根据指定属性寻找用户指定的下一个焦点View
+            next = findNextUserSpecifiedFocus(root, focused, direction);
+        }
+        if (next != null) {
+            return next;
+        }
+        ArrayList&lt;View&gt; focusables = mTempList;
+        try {
+            focusables.clear();
+            root.addFocusables(focusables, direction);
+            if (!focusables.isEmpty()) {
+                //2. 根据方向位置等寻找下一个焦点View
+                next = findNextFocus(root, focused, focusedRect, direction, focusables);
+            }
+        } finally {
+            focusables.clear();
+        }
+        return next;
+ }
+</code></pre>
+<p>焦点寻找分为两步：</p>
+<ol>
+<li>
+<p>findNextUserSpecifiedFocus(root, focused, direction) 寻找用户指定的焦点View。我们可以在xml中指定焦点寻找的规则，此方法就是根据指定的id来返回对应的View，代码如下：</p>
+<pre><code class="language-xml">   &lt;Button
+       android:id=&quot;@+id/button1&quot;
+       android:layout_width=&quot;wrap_content&quot;
+       android:layout_height=&quot;wrap_content&quot;
+       android:nextFocusDown=&quot;@+id/button2&quot;
+       android:nextFocusUp=&quot;@+id/button2&quot;
+       android:nextFocusLeft=&quot;@+id/button2&quot;
+       android:nextFocusRight=&quot;@+id/button2&quot;
+       android:nextFocusForward=&quot;@+id/button2&quot;
+       android:text=&quot;Button&quot;/&gt;
+</code></pre>
+</li>
+</ol>
+<p>2.如果没有指定规则，则根据按键方向，寻找一个最应该获取焦点的View。重点看看这种寻找焦点方式！</p>
+<pre><code class="language-java"> ArrayList&lt;View&gt; focusables = mTempList;
+ try {
+       focusables.clear();
+       root.addFocusables(df`1b1 , direction)
+       if (!focusables.isEmpty()) {
+           next = findNextFocus(root, focused, focusedRect, direction, focusables);
+       }
+ } finally {
+       focusables.clear();
+ }
+</code></pre>
+<p>首先，构建一个focusables列表，其中包含root下所有可能获取焦点的View.</p>
+<p>[@ViewGroup]</p>
+<pre><code class="language-java">public void addFocusables(ArrayList&lt;View&gt; views, int direction, int focusableMode) {
+        final int focusableCount = views.size();
+
+        final int descendantFocusability = getDescendantFocusability();
+
+        if (descendantFocusability != FOCUS_BLOCK_DESCENDANTS) {
+            final int count = mChildrenCount;
+            final View[] children = mChildren;
+
+            for (int i = 0; i &lt; count; i++) {
+                final View child = children[i];
+                if ((child.mViewFlags &amp; VISIBILITY_MASK) == VISIBLE) {
+                    child.addFocusables(views, direction, focusableMode);
+                }
+            }
+        }
+
+        if (descendantFocusability != FOCUS_AFTER_DESCENDANTS
+                // No focusable descendants
+                || focusableCount == views.size()) {
+            super.addFocusables(views, direction, focusableMode);
+        }
+}
+</code></pre>
+<blockquote>
+<p>这里涉及到descendantFocusability这个概念，这个变量有三个值，可以在XML中给ViewGroup设置，用来控制后代的焦点行为。</p>
+<ol>
+<li>android:descendantFocusability=&quot;blocksDescendants&quot;   阻止后代获取焦点</li>
+<li>android:descendantFocusability=&quot;afterDescendants&quot;      如果没有任何一个后代可以获取焦点的时候，再获取焦点</li>
+<li>android:descendantFocusability=&quot;beforeDescendants&quot;    在后代之前获取焦点</li>
+</ol>
+<p>这几个属性除了在这里有影响，对ViewGroup的requestFocus方法也有影响：</p>
+<pre><code class="language-java">public boolean requestFocus(int direction, Rect previouslyFocusedRect) {
+        int descendantFocusability = getDescendantFocusability();
+
+        switch (descendantFocusability) {
+            case FOCUS_BLOCK_DESCENDANTS:
+                return super.requestFocus(direction, previouslyFocusedRect);
+            case FOCUS_BEFORE_DESCENDANTS: {
+                final boolean took = super.requestFocus(direction, previouslyFocusedRect);
+                return took ? took : onRequestFocusInDescendants(direction, previouslyFocusedRect);
+            }
+            case FOCUS_AFTER_DESCENDANTS: {
+                final boolean took = onRequestFocusInDescendants(direction, previouslyFocusedRect);
+                return took ? took : super.requestFocus(direction, previouslyFocusedRect);
+            }
+            default:
+                throw new IllegalStateException(&quot;descendant focusability must be &quot;
+                        + &quot;one of FOCUS_BEFORE_DESCENDANTS, FOCUS_AFTER_DESCENDANTS, FOCUS_BLOCK_DESCENDANTS &quot;
+                        + &quot;but is &quot; + descendantFocusability);
+        }
+    }
+</code></pre>
+</blockquote>
+<p>构建完焦点列表之后：</p>
+<p>[@FocusFinder]</p>
+<pre><code class="language-java">private View findNextFocus(ViewGroup root, View focused, Rect focusedRect,
+            int direction, ArrayList&lt;View&gt; focusables) {
+        if (focused != null) {
+            if (focusedRect == null) {
+                focusedRect = mFocusedRect;
+            }
+            // fill in interesting rect from focused
+            //获取焦点View的坐标
+            focused.getFocusedRect(focusedRect); 
+          	//将焦点View的坐标转换为root坐标系的坐标
+            root.offsetDescendantRectToMyCoords(focused, focusedRect); 
+        } else {
+   			//省略...
+        }
+
+        switch (direction) {
+            case View.FOCUS_FORWARD:
+            case View.FOCUS_BACKWARD:
+                return findNextFocusInRelativeDirection(focusables, root, focused, focusedRect,
+                        direction);
+            case View.FOCUS_UP:
+            case View.FOCUS_DOWN:
+            case View.FOCUS_LEFT:
+            case View.FOCUS_RIGHT:
+                return findNextFocusInAbsoluteDirection(focusables, root, focused,
+                        focusedRect, direction);
+            default:
+                throw new IllegalArgumentException(&quot;Unknown direction: &quot; + direction);
+        }
+    }
+</code></pre>
+<blockquote>
+<p>ViewGroup中有两个方法用来进行坐标系转换：</p>
+<p>1.offsetDescendantRectToMyCoords   将某个后代的坐标系转换到当前ViewGroup的坐标系中</p>
+<p>2.offsetRectIntoDescendantCoords      将当前ViewGroup的坐标转换到后代坐标系中</p>
+</blockquote>
+<p>这里转换过后，我们获取到了当前焦点的一块矩形区域 focusedRect，用这块区域+按键方向来查找下一个焦点。</p>
+<p>[@FocusFinder]</p>
+<pre><code class="language-java">View findNextFocusInAbsoluteDirection(ArrayList&lt;View&gt; focusables, ViewGroup root, View focused,
+            Rect focusedRect, int direction) {
+        // initialize the best candidate to something impossible
+        // (so the first plausible view will become the best choice)
+  		//1.先把把矩形设置成最差的情况，在接下来的匹配中被替换掉。
+        mBestCandidateRect.set(focusedRect);
+        switch(direction) {
+            case View.FOCUS_LEFT:
+                mBestCandidateRect.offset(focusedRect.width() + 1, 0);
+                break;
+            case View.FOCUS_RIGHT:
+                mBestCandidateRect.offset(-(focusedRect.width() + 1), 0);
+                break;
+            case View.FOCUS_UP:
+                mBestCandidateRect.offset(0, focusedRect.height() + 1);
+                break;
+            case View.FOCUS_DOWN:
+                mBestCandidateRect.offset(0, -(focusedRect.height() + 1));
+        }
+
+        View closest = null;
+
+  		//2.遍历focusables，找到最接近的View
+        int numFocusables = focusables.size();
+        for (int i = 0; i &lt; numFocusables; i++) {
+            View focusable = focusables.get(i);
+
+            // only interested in other non-root views
+            if (focusable == focused || focusable == root) continue;
+
+            // get focus bounds of other view in same coordinate system
+            focusable.getFocusedRect(mOtherRect);
+            root.offsetDescendantRectToMyCoords(focusable, mOtherRect);
+
+            if (isBetterCandidate(direction, focusedRect, mOtherRect, mBestCandidateRect)) {
+                mBestCandidateRect.set(mOtherRect);
+                closest = focusable;
+            }
+        }
+        return closest;
+    }
+</code></pre>
+<p>遍历focusables列表，利用isBetterCandidate方法找到最合适的View作为下一个焦点:</p>
+<p>[@FocusFinder]</p>
+<pre><code class="language-java">boolean isBetterCandidate(int direction, Rect source, Rect rect1, Rect rect2) {
+
+        // to be a better candidate, need to at least be a candidate in the first
+        // place :)
+        if (!isCandidate(source, rect1, direction)) {
+            return false;
+        }
+
+        // we know that rect1 is a candidate.. if rect2 is not a candidate,
+        // rect1 is better
+        if (!isCandidate(source, rect2, direction)) {
+            return true;
+        }
+
+        // if rect1 is better by beam, it wins
+        if (beamBeats(direction, source, rect1, rect2)) {
+            return true;
+        }
+
+        // if rect2 is better, then rect1 cant' be :)
+        if (beamBeats(direction, source, rect2, rect1)) {
+            return false;
+        }
+
+        // otherwise, do fudge-tastic comparison of the major and minor axis
+        return (getWeightedDistanceFor(
+                        majorAxisDistance(direction, source, rect1),
+                        minorAxisDistance(direction, source, rect1))
+                &lt; getWeightedDistanceFor(
+                        majorAxisDistance(direction, source, rect2),
+                        minorAxisDistance(direction, source, rect2)));
+    }
+</code></pre>
+<p>这里根据direction、sourceRect来比较Rect1和Rect2谁更合适，有兴趣可以看下。</p>
+<p>至此，已经找到了下一个要获取焦点的View，在<code>ViewPostImeInputState.processKeyEvent</code>中对focusedView执行<em>requestFocus</em>方法请求焦点，其中会回调<code>onFocusChange</code>等焦点变化方法，并且更新前面提到过的<code>mFocused</code>链。</p>
+<p>在整个焦点寻找的过程中，我们可以做以下事情来改变它原来寻焦点的逻辑：</p>
+<ul>
+<li>xml中指定left/top/right/down/forward对应的view。</li>
+<li>复写addFocusables方法，根据我们的逻辑来添加候选的focusable views。</li>
+<li>重写focusSearch方法，执行我们的焦点寻找逻辑，返回下一个获取焦点的View。比如RecyclerView就重写了focusSearch方法，将焦点寻找的逻辑交给自己的LayoutManager处理。</li>
+</ul>
+<h2 id="相关资料">相关资料</h2>
+<p><a href="http://gityuan.com/2015/09/19/android-touch/">Android触摸事件分发机制</a></p>
+<p><a href="https://juejin.im/post/58f8d362ac502e006391bf63">焦点寻址</a></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Android NFC开发入门]]></title>
+        <id>https://monkeylmj.github.io//post/androidnfc</id>
+        <link href="https://monkeylmj.github.io//post/androidnfc">
+        </link>
+        <updated>2017-02-28T05:08:50.000Z</updated>
+        <summary type="html"><![CDATA[<p>总结一下Android中NFC开发相关的知识点。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>总结一下Android中NFC开发相关的知识点。</p>
+<!-- more -->
+<h2 id="nfc的几个概念">NFC的几个概念</h2>
+<ul>
+<li>
+<p><strong>接触式IC卡</strong> 例如手机SIM卡、金融IC卡。</p>
+</li>
+<li>
+<p><strong>非接触式IC卡</strong> 又称射频卡，将无线射频识别技术和IC卡结合起来，免接触。</p>
+</li>
+<li>
+<p><strong>RFID</strong> 无线射频识别，一种无线通讯技术。</p>
+<p>基本原理：阅读器将电信号转换为无线电信号（电磁波的一个频带）发给标签，标签使用接收到的无线电波能量供电，然后将存储在自身数据以无线电信号的形式应答给阅读器，以读取到标签中的数据。</p>
+</li>
+<li>
+<p><strong>NFC</strong>（Near Field Communication） 短距离无线通讯技术，基于RFID，一般在10cm之内使用13.56MHz频率通讯</p>
+</li>
+</ul>
+<hr>
+<h2 id="android如何使用nfc">Android如何使用NFC</h2>
+<h3 id="权限声明">权限声明</h3>
+<p>在AndroidManifest.xml中如下申请NFC权限:</p>
+<pre><code class="language-xml">&lt;uses-permission android:name=&quot;android.permission.NFC&quot; /&gt;
+</code></pre>
+<p>添加下面一行，保证在GooglePlay商店此应用只显示给带NFC硬件的设备</p>
+<pre><code class="language-xml">&lt;uses-feature android:name=&quot;android.hardware.nfc&quot; android:required=&quot;true&quot; /&gt;
+</code></pre>
+<p>在代码中动态判断设备是否支持NFC：</p>
+<pre><code class="language-java">if(NfcAdapter.getDefaultAdapter() == null){
+  Log.v(&quot;monkey&quot;,&quot;设备不支持NFC.&quot;);
+}
+</code></pre>
+<h3 id="nfc的三种模式">NFC的三种模式</h3>
+<ol>
+<li><strong>Reader/writer mode</strong> 通过Android设备对NFC标签进行读写数据操作。</li>
+<li><strong>P2P mode</strong> NFC设备之间交换数据，AndroidBeam使用这种模式。</li>
+<li><strong>Card emulation mode</strong> NFC设备模拟成NFC标签。</li>
+</ol>
+<h2 id="readerwrite-mode">Reader/write mode</h2>
+<p>Android通过标签分发系统分析发现的NFC标签，封装成对应的Intent发给Android上层进行对应的处理。</p>
+<p>Android中关于NFC有三种类型的Action（优先级由高到低）：</p>
+<p><code>ACTION_NDEF_DISCOVERED</code> <code>ACTION_TECH_DISCOVERED</code> <code>ACTION_TAG_DISCOVERED</code></p>
+<p>这里的<em>优先级</em>可以通过标签分发系统的机制来解释:</p>
+<ol>
+<li>如果一个包含<strong>NDEF</strong>格式数据的NFC标签被发现，Android优先发送带<code>ACTION_NDEF_DISCOVERED</code>action的Intent。</li>
+<li>如果没有Activity处理<code>ACTION_NDEF_DISCOVERED</code>类型的intent <em>或者</em> NFC标签不包含<strong>NDEF</strong>格式的数据（使用了其他已知技术）<em>或者</em> <strong>NDEF</strong>格式的标签不能被标签分发系统映射成正确的Intent，则会发送优先级较低的<code>ACTION_TECH_DISCOVERED</code>intent来尝试启动Activity（不会发送<code>ACTION_NDEF_DISCOVERED</code>）。</li>
+<li>如果仍然没有Activity响应上述两个Action，则系统会发送优先级最低的<code>ACTION_TAG_DISCOVERED</code>的Intent。</li>
+</ol>
+<p>图为标签分发系统：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a184962704.png" alt=""></p>
+<h3 id="nfc数据格式">NFC数据格式</h3>
+<p>NFC的数据格式可以分为NDEF和非NDEF两种。<strong>NDEF</strong>是NFC Forum定义的一种标准格式，在Android中得到最大范围的支持，是Android最推荐使用的格式。</p>
+<ul>
+<li>
+<p><strong>NDEF数据</strong>在AndroidSDK中被封装成一个包含多个<strong>NdefRecord</strong>的<strong>NdefMessage</strong>，<strong>android.nfc.tech.Ndef</strong>类封装了各种便捷的读写数据的操作。</p>
+<p>前面说过当Android设备发现NDEF格式的标签之后会发出<code>ACTION_NDEF_DISCOVERED</code>类型的Intent。通常在intent中还会带上更加具体的mime type &amp; URI等数据，以便筛选更加具体的Activity来进行处理（这个是Android推荐使用这个格式的原因之一）。下面就来说说，NDEF具体的数据格式以及Android如何分析NDEF数据来生成对应的Intent。</p>
+<p><strong>NDEF数据格式</strong>：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a185c4e7fc.png" alt=""></p>
+<ol>
+<li><strong>TNF</strong> 3bits的字段，标识了如何解析第二个字段type。包含的值见表一：</li>
+</ol>
+<p>表一，TNF字段以及映射：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">TNF</th>
+<th>映射的Intent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">TNF_ABSOLUTE_URI</td>
+<td>基于<em>type</em>的URI</td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_EMPTY</td>
+<td>无映射，降级到<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_EXTERNAL_TYPE</td>
+<td>基于<em>type</em>的URI. type形式为 <domain>:<service>。映射后的URI形式为： <code>vnd.android.nfc://ext/&lt;domain&gt;:&lt;service&gt;</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_MIME_MEDIA</td>
+<td>基于type的MIME类型</td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_UNCHANGED</td>
+<td>无效，降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_UNKNOWN</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_WELL_KNOWN</td>
+<td>基于type（RTD)的MIME type or URI ，需要再根据type的值进行映射（见表二）</td>
+</tr>
+</tbody>
+</table>
+<p>表二，RTDs for TNF_WELL_KNOWN以及映射：</p>
+<table>
+<thead>
+<tr>
+<th>RTD</th>
+<th>映射的Intent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTD_ALTERNATIVE_CARRIER</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td>RTD_HANDOVER_CARRIER</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td>RTD_HANDOVER_REQUEST</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td>RTD_HANDOVER_SELECT</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td>RTD_SMART_POSTER</td>
+<td>基于解析payload的URI</td>
+</tr>
+<tr>
+<td>RTD_TEXT</td>
+<td>MIME类型 text/p</td>
+</tr>
+<tr>
+<td>RTD_URI</td>
+<td>基于payloadd的URI</td>
+</tr>
+</tbody>
+</table>
+<ol start="2">
+<li><strong>type</strong>,描述Record的类型，如果TNF为TNF_WELL_KNOWN，则这个字段指定RTD，见上表二。</li>
+<li><strong>ID</strong>，字段的唯一标识，一般不常用，可以用来标识一张标签。</li>
+<li><strong>payload</strong>，有效荷载，保存真实的数据。</li>
+</ol>
+<p><strong>创建各种类型的NDEF数据&amp;响应对应NDEF 数据的IntentFilter实例</strong></p>
+<ol>
+<li>创建TNF_ABSOLUTE_URI类型数据:</li>
+</ol>
+</li>
+</ul>
+<pre><code class="language-java">	NdefRecord uriRecord = new NdefRecord(
+    NdefRecord.TNF_ABSOLUTE_URI ,
+    &quot;http://developer.android.com/index.html&quot;.getBytes(Charset.forName(&quot;US-ASCII&quot;)),
+    new byte[0], new byte[0]);
+</code></pre>
+<p>​	响应的intent filter：</p>
+<pre><code class="language-xml">&lt;intent-filter&gt;
+    &lt;action android:name=&quot;android.nfc.action.NDEF_DISCOVERED&quot; /&gt;
+    &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;
+    &lt;data android:scheme=&quot;http&quot;
+        android:host=&quot;developer.android.com&quot;
+        android:pathPrefix=&quot;/index.html&quot; /&gt;
+&lt;/intent-filter&gt;
+</code></pre>
+<p>​	2. 创建TNF_MIME_MEDIA类型的数据：</p>
+<pre><code class="language-java">  NdefRecord mimeRecord = NdefRecord.createMime(&quot;application/vnd.com.example.android.beam&quot;,
+      &quot;Beam me up, Android&quot;.getBytes(Charset.forName(&quot;US-ASCII&quot;)));
+</code></pre>
+<pre><code>对应的intent filter:
+</code></pre>
+<pre><code class="language-xml">  &lt;intent-filter&gt;
+      &lt;action android:name=&quot;android.nfc.action.NDEF_DISCOVERED&quot; /&gt;
+      &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;
+      &lt;data android:mimeType=&quot;application/vnd.com.example.android.beam&quot; /&gt;
+  &lt;/intent-filter&gt;
+</code></pre>
+<p>​	3. 创建TNF_EXTERNAL_TYPE类型的数据:</p>
+<pre><code class="language-java">  byte[] payload; //assign to your data
+  String domain = &quot;com.example&quot;; //usually your app's package name
+  String type = &quot;externalType&quot;;
+  NdefRecord extRecord = NdefRecord.createExternal(domain, type, payload);
+</code></pre>
+<pre><code>对应的intent filter:
+</code></pre>
+<pre><code class="language-xml">  &lt;intent-filter&gt;
+      &lt;action android:name=&quot;android.nfc.action.NDEF_DISCOVERED&quot; /&gt;
+      &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;
+      &lt;data android:scheme=&quot;vnd.android.nfc&quot;
+          android:host=&quot;ext&quot;
+          android:pathPrefix=&quot;/com.example:externalType&quot;/&gt;
+  &lt;/intent-filter&gt;
+</code></pre>
+<p>​	4. 创建TNF_WELL_KNOWN with RTD_TEXT类型的数据：</p>
+<pre><code class="language-java">public NdefRecord createTextRecord(String payload, Locale locale, boolean encodeInUtf8) {
+    byte[] langBytes = locale.getLanguage().getBytes(Charset.forName(&quot;US-ASCII&quot;));
+    Charset utfEncoding = encodeInUtf8 ? Charset.forName(&quot;UTF-8&quot;) : Charset.forName(&quot;UTF-16&quot;);
+    byte[] textBytes = payload.getBytes(utfEncoding);
+    int utfBit = encodeInUtf8 ? 0 : (1 &lt;&lt; 7);
+    char status = (char) (utfBit + langBytes.length);
+    byte[] data = new byte[1 + langBytes.length + textBytes.length];
+    data[0] = (byte) status;
+    System.arraycopy(langBytes, 0, data, 1, langBytes.length);
+    System.arraycopy(textBytes, 0, data, 1 + langBytes.length, textBytes.length);
+    NdefRecord record = new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+    NdefRecord.RTD_TEXT, new byte[0], data);
+    return record;
+}
+</code></pre>
+<p>​	对应的Intent filter:</p>
+<pre><code class="language-xml">&lt;intent-filter&gt;
+    &lt;action android:name=&quot;android.nfc.action.NDEF_DISCOVERED&quot; /&gt;
+    &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;
+    &lt;data android:mimeType=&quot;text/plain&quot; /&gt;
+&lt;/intent-filter&gt;
+
+</code></pre>
+<p>​</p>
+<p>​	<strong>读写NDEF格式的NFC数据</strong>：</p>
+<p>​	1. Intent中包含三个相关的数据：</p>
+<p>​	<strong>EXTRA_TAG</strong> 扫描到的标签对象</p>
+<p>​	<strong>EXTRA_NDEF_MESSAGES</strong> 从标签中获取到的NDEF数据对象，只有ACTION_NDEF_DISCOVERED类型的				Intent包含</p>
+<p>​	<strong>EXTRA_ID</strong> 标签的ID（可选）</p>
+<p>​	2 .解析NDEF数据的代码一般为：</p>
+<pre><code class="language-java">@Override
+protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    ...
+    if (intent != null &amp;&amp; NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+        Parcelable[] rawMessages =
+            intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+        if (rawMessages != null) {
+            NdefMessage[] messages = new NdefMessage[rawMessages.length];
+            for (int i = 0; i &lt; rawMessages.length; i++) {
+                messages[i] = (NdefMessage) rawMessages[i];
+            }
+            // Process the messages array.
+            ...
+        }
+    }
+}
+</code></pre>
+<p>​	写NDEF数据的代码一般为：</p>
+<pre><code class="language-java"> @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        NdefRecord ndefRecord = NdefRecord.createExternal(&quot;domain&quot;, &quot;service&quot;, &quot;content&quot;.getBytes());
+        NdefMessage ndefMessage = new NdefMessage(new NdefRecord[] {ndefRecord});
+        Ndef ndef = Ndef.get(tag); //获取Ndef tech的对象
+        if (ndef != null) { //非NDEF数据
+            try {
+                ndef.connect();
+                ndef.writeNdefMessage(ndefMessage);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (FormatException e) {
+                e.printStackTrace();
+            }
+        } else { //可格式化为NDEF数据
+            NdefFormatable ndefFormatable = NdefFormatable.get(tag);
+            if (ndefFormatable != null) {
+                try {
+                    ndefFormatable.connect();
+                    ndefFormatable.format(ndefMessage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (FormatException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+</code></pre>
+<p>​</p>
+<ul>
+<li>
+<p><strong>非NDEF数据</strong>可以配合<strong>android.nfc.tech</strong>包下的对应的类来进行使用。</p>
+<p>每个NFC标签可能支持不同种类的<strong>technologies</strong>(不同格式数据的读写），可以通过如下代码获取标签支持的<strong>techonologies</strong>:</p>
+</li>
+</ul>
+<pre><code class="language-java">  mTag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+  String[] teches = mTag.getTechList();
+</code></pre>
+<p>Android支持的常见Technology如下表：</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TagTechnology</code></td>
+<td>The interface that all tag technology classes must implement.</td>
+</tr>
+<tr>
+<td><code>NfcA</code></td>
+<td>Provides access to NFC-A (ISO 14443-3A) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>NfcB</code></td>
+<td>Provides access to NFC-B (ISO 14443-3B) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>NfcF</code></td>
+<td>Provides access to NFC-F (JIS 6319-4) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>NfcV</code></td>
+<td>Provides access to NFC-V (ISO 15693) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>IsoDep</code></td>
+<td>Provides access to ISO-DEP (ISO 14443-4) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>Ndef</code></td>
+<td>Provides access to NDEF data and operations on NFC tags that have been formatted as NDEF.</td>
+</tr>
+<tr>
+<td><code>NdefFormatable</code></td>
+<td>Provides a format operations for tags that may be NDEF formattable.</td>
+</tr>
+</tbody>
+</table>
+<p>Android设备可选支持的Technology：</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MifareClassic</code></td>
+<td>Provides access to MIFARE Classic properties and I/O operations, if this Android device supports MIFARE.</td>
+</tr>
+<tr>
+<td><code>MifareUltralight</code></td>
+<td>Provides access to MIFARE Ultralight properties and I/O operations, if this Android device supports MIFARE.</td>
+</tr>
+</tbody>
+</table>
+<p>前面讲解过，标签在某些情况下会降级为<code>ACTION_TECH_DISCOVERED</code>类型的Intent，对应的xml文件为:</p>
+<pre><code class="language-xml">&lt;activity&gt;
+...
+&lt;intent-filter&gt;
+    &lt;action android:name=&quot;android.nfc.action.TECH_DISCOVERED&quot;/&gt;
+&lt;/intent-filter&gt;
+
+&lt;meta-data android:name=&quot;android.nfc.action.TECH_DISCOVERED&quot;
+    android:resource=&quot;@xml/nfc_tech_filter&quot; /&gt;
+...
+&lt;/activity&gt;
+</code></pre>
+<p>其中**android:resource=&quot;@xml/nfc_tech_filter&quot;**指定NFC technology的过滤文件，放在<code>res/xml</code>目录下任意命名。其中指定的technologies必须是所识别的标签支持的technologies的子集，才能匹配到。例如：</p>
+<pre><code class="language-xml">&lt;resources xmlns:xliff=&quot;urn:oasis:names:tc:xliff:document:1.2&quot;&gt;
+    &lt;tech-list&gt;
+        &lt;tech&gt;android.nfc.tech.IsoDep&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NfcA&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NfcB&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NfcF&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NfcV&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.Ndef&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NdefFormatable&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.MifareClassic&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.MifareUltralight&lt;/tech&gt;
+    &lt;/tech-list&gt;
+&lt;/resources&gt;
+</code></pre>
+<p>或者分开多个**<tech-list>**,他们之间相互独立，匹配一个就好。</p>
+<pre><code class="language-xml">&lt;resources xmlns:xliff=&quot;urn:oasis:names:tc:xliff:document:1.2&quot;&gt;
+    &lt;tech-list&gt;
+        &lt;tech&gt;android.nfc.tech.NfcA&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.Ndef&lt;/tech&gt;
+    &lt;/tech-list&gt;
+&lt;/resources&gt;
+
+&lt;resources xmlns:xliff=&quot;urn:oasis:names:tc:xliff:document:1.2&quot;&gt;
+    &lt;tech-list&gt;
+        &lt;tech&gt;android.nfc.tech.NfcB&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.Ndef&lt;/tech&gt;
+    &lt;/tech-list&gt;
+&lt;/resources&gt;
+</code></pre>
+<p><strong>各种类型的非NDEF数据格式的读写</strong></p>
+<p>查看对应的规格书按照协议来使用，在developer.android.com中可以简单地查看一种数据格式的说明：如 <a href="https://developer.android.com/reference/android/nfc/tech/MifareClassic.html">MIFAREClassic</a></p>
+<h2 id="p2p-mode">P2P mode</h2>
+<p>即AndroidBeam功能，使两台Android设备进行快速的数据交换。发送数据的设备打开发送数据的应用（相当于一张标签），接受数据的设备解锁靠近发送数据的设备之后，发送数据的设备UI显示“Touch to Beam&quot;,点击即可将数据发送给接收端（接收端设备接受到数据通过标签分发系统决定打开的应用进行处理）。</p>
+<p>相关的API有两个：</p>
+<p><strong>NfcAdapter.setNdefPushMessage()</strong> :发送端设置要发送的NDEF数据。两台设备靠近之后点击”Touch to Beam&quot;发送此数据。</p>
+<p><strong>NfcAdapter.setNdefPushMessageCallback()</strong>:此方法接受一个<strong>NfcAdapter.CreateNdefMessageCallback</strong>类型的回调接口，此接口在两台设备靠近时回调进行NDEF数据的创建，然后点击“Touch to Beam&quot;发送数据。</p>
+<p>两个接口的唯一不同在于：接口1一开始便确定了要发送的数据；接口2在两个设备靠近时才创建要发送的NDEF数据。</p>
+<p><em>代码示例</em>(Demo中onCreate中为发送端逻辑，onResume中为接收端处理逻辑):</p>
+<pre><code class="language-java">public class MainActivity extends AppCompatActivity {
+
+    private NfcAdapter mNfcAdapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        if (mNfcAdapter == null) {
+            Toast.makeText(this, &quot;not support nfc&quot;, Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        final NdefRecord ndefRecord = 		 NdefRecord.createMime(&quot;application/vnd.com.example.android.beam&quot;, &quot;hello android&quot;.getBytes());
+        mNfcAdapter.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
+            @Override
+            public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
+                Log.v(&quot;seewo&quot;, &quot;createNdefMessage&quot;);
+                return new NdefMessage(ndefRecord);
+            }
+        }, this);
+//        mNfcAdapter.setNdefPushMessage(new NdefMessage(ndefRecord), this); //接口一的实现
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //接收端的处理逻辑
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
+            processIntent(getIntent());
+        }
+    }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+        setIntent(intent);
+    }
+
+    void processIntent(Intent intent) {
+        Parcelable[] rawMessages = 		     intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+        NdefMessage msg = (NdefMessage) rawMessages[0];
+        String info = new String(msg.getRecords()[0].getPayload());
+        Toast.makeText(this, info, Toast.LENGTH_SHORT).show();
+    }
+}
+
+</code></pre>
+<h2 id="card-emulation-mode">Card emulation mode</h2>
+<p>Android4.4之前通过在Android设备中内置一个芯片来实现。通信路径如下图：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a1893b60b8.png" alt=""></p>
+<p>Android4.4之后可以通过纯软件模拟NFC卡。通信路径如下图：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a189e94ec6.png" alt=""></p>
+<p>在Android上层程序只需实现一个服务，并且给服务绑定一个ID，便可以模拟成NFC卡，根据读卡器发出的ID响应数据。</p>
+<pre><code class="language-java">public class MyHostApduService extends HostApduService {
+    @Override
+    public byte[] processCommandApdu(byte[] apdu, Bundle extras) {
+       ...
+    }
+    @Override
+    public void onDeactivated(int reason) {
+       ...
+    }
+}
+</code></pre>
+<pre><code class="language-xml">&lt;service android:name=&quot;.MyHostApduService&quot; android:exported=&quot;true&quot;
+         android:permission=&quot;android.permission.BIND_NFC_SERVICE&quot;&gt;
+    &lt;intent-filter&gt;
+        &lt;action android:name=&quot;android.nfc.cardemulation.action.HOST_APDU_SERVICE&quot;/&gt;
+    &lt;/intent-filter&gt;
+    &lt;meta-data android:name=&quot;android.nfc.cardemulation.host_apdu_service&quot;
+               android:resource=&quot;@xml/apduservice&quot;/&gt;
+&lt;/service&gt;
+</code></pre>
+<pre><code class="language-xml">&lt;host-apdu-service xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+           android:description=&quot;@string/servicedesc&quot;
+           android:requireDeviceUnlock=&quot;false&quot;&gt;
+    &lt;aid-group android:description=&quot;@string/aiddescription&quot;
+               android:category=&quot;other&quot;&gt;
+        &lt;aid-filter android:name=&quot;F0010203040506&quot;/&gt;
+        &lt;aid-filter android:name=&quot;F0394148148100&quot;/&gt;
+    &lt;/aid-group&gt;
+&lt;/host-apdu-service&gt;
+</code></pre>
+<hr>
+<h2 id="相关资料">相关资料</h2>
+<p>1.NDEF数据解析实例：<a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">http</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note#</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">/</a></p>
+<p>2.AndnroidNFC官网介绍：<a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">https</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">://</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">developer.android.com/guide/topics/connectivity/nfc/index.html</a></p>
+<p>3.NFC相关的应用：NXPTagWriter、NXPTagInfo、MIFARE经典工具</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Android的消息机制-Handler]]></title>
+        <id>https://monkeylmj.github.io//post/handler</id>
+        <link href="https://monkeylmj.github.io//post/handler">
+        </link>
+        <updated>2016-08-08T14:51:48.000Z</updated>
+        <summary type="html"><![CDATA[<p>本文总结一下Android消息机制Handler的一些内部实现原理。Handler在我们Android开发中经常用来切换UI线程和Worker线程，详细了解其实现原理之后，更加灵活地使用。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本文总结一下Android消息机制Handler的一些内部实现原理。Handler在我们Android开发中经常用来切换UI线程和Worker线程，详细了解其实现原理之后，更加灵活地使用。</p>
+<!-- more -->
+<h2 id="为什么需要切换uiworker线程">为什么需要切换UI/Worker线程?</h2>
+<p>Android规定所有的UI操作必须在主线程中完成，又建议不要在主线程中进行耗时的操作，否则就会产生ANR异常。所以，我们在进行一些耗时操作时，必须开一个子线程进行此类操作，如果需要在子线程中访问UI资源，那么就需要切换到主线程进行UI操作。</p>
+<p>ViewRootImpl中对UI的操作进行了验证：</p>
+<pre><code class="language-java">void checkThread() {
+        if (mThread != Thread.currentThread()) {
+            throw new CalledFromWrongThreadException(
+                    &quot;Only the original thread that created a view hierarchy can touch its views.&quot;);
+        }
+    }
+</code></pre>
+<p>这类错误在新手接触Android开发肯定遇到过，就是在子线程操作UI导致的。</p>
+<p>那么，Android为什么那么蛋疼地要求一定要在UI线程中进行UI操作呢？</p>
+<p>这是因为Android的UI操作是非线程安全的，如果多个线程并发操作UI，可能会导致UI出于某种不可控的状态（可以理解为Google程序员解决不了多线程并发的问题 0-0，如果加上锁的机制来控制并发问题又会导致代码设计、效率问题），所以Android便采用了单线程模型,只能在主线程中操作UI.</p>
+<h2 id="handler消息机制模型">Handler消息机制模型</h2>
+<p><img src="https://i.loli.net/2018/08/05/5b65d1cc0d057.png" alt=""></p>
+<p>上图是Handler能够进行线程切换的模型图，在Thread#1中发出的Message添加到Thread#2中对应的消息队列中，然后Thread#2中的Looper不断循环取出Message，在Thread#2中调用相关逻辑，完成两个线程间的切换。</p>
+<p>图中包含了我们需要关心的所有对象，Handler、Looper、MessageQueue。</p>
+<p><strong>Handler</strong></p>
+<p>暴露给我们用来切换线程的上层接口，提供了一系列send、post方法，用来发送Message。</p>
+<p><strong>Looper</strong></p>
+<p>线程切换的关键，内部维护一个消息队列，该对象以阻塞的方式不断从MessageQueue中读取消息，然后在当前线程（要切换的线程）执行消息所代表的逻辑。</p>
+<p><strong>MessageQueue</strong></p>
+<p>消息队列，用来存放Message。其实现是单链表数据结构，方便插入和删除。</p>
+<h2 id="handler消息机制源码分析">Handler消息机制源码分析</h2>
+<p>以上介绍了Handler机制的几个重要组成部分，究竟它们是怎么组合在一起，完成Android中重要的消息机制的呢，我们通过源码来进行分析，这一部分代码非常清晰！</p>
+<p>我们在开发中切换到UI线程的常规做法就是，在最外层实例化一个Handler子类对象，重写handleMessage方法，等待子线程发过来的message，然后对应message进行不同的UI操作。很显然，要看透这一套系统，把它们之间的关系理清，就要从Handler的构造方法开始看起啦，这是我们能看到的入口。</p>
+<p>Handler构造方法很多，我们从无参构造方法进入，调用到另一个有参构造方法：</p>
+<pre><code class="language-java">public Handler(Callback callback, boolean async) {
+        ...
+        mLooper = Looper.myLooper();
+        if (mLooper == null) {
+            throw new RuntimeException(
+                &quot;Can't create handler inside thread that has not called Looper.prepare()&quot;);
+        }
+        mQueue = mLooper.mQueue;
+        mCallback = callback;
+        mAsynchronous = async;
+    }
+</code></pre>
+<p>一眼望去就看到了我们的Looper和MessageQueue。</p>
+<p>继续看Looper.myLooper()的实现：</p>
+<pre><code class="language-java">static final ThreadLocal&lt;Looper&gt; sThreadLocal = new ThreadLocal&lt;Looper&gt;();
+public static Looper myLooper() {
+        return sThreadLocal.get();
+    }
+</code></pre>
+<p>炒鸡简单，直接通过sThreadLocal.get()便得到了Looper对象。那么这里ThreadLocal又是什么东西，怎么从它里面就可以得到Looper对象呢。</p>
+<p>其实<strong>ThreadLoal</strong>是一个很巧妙的类，通过它可以往指定的线程中存储数据，只有在指定的线程中可以获得存储的数据，类似于一个HashMap的结构（Key是某个线程），但是其内部的实现完全不是HashMap，可以抽象地理解为ThreadLocal是一个以线程为作用域的HashMap。可以深入ThreadLocal查看其具体实现，这里就不详细讨论了。</p>
+<p>ThreadLocal在这里的使用场景是用来保存每个线程的Looper对象，通过ThreadLocal#set(Looper)保存当前线程的Looper对象，然后需要的时候通过ThreadLocal#get()取出来用。</p>
+<p>在Handler构造方法中可以看到，如果mLooper==null，则会抛出异常提示“Can't create handler inside thread that has not called Looper.prepare()”. 那么这样看来我们创建Looper对象实例，然后set进ThreadLocal就是在所谓的Looper.prepare()中进行的了~。</p>
+<p>验证：</p>
+<pre><code class="language-java">private static void prepare(boolean quitAllowed) {
+        if (sThreadLocal.get() != null) {
+            throw new RuntimeException(&quot;Only one Looper may be created per thread&quot;);
+        }
+        sThreadLocal.set(new Looper(quitAllowed));
+    }
+</code></pre>
+<p>嗯，如此的完美，如果ThreadLocal中已经设置过Looper则抛出异常&quot;Only one Looper may be created per thread&quot;，所以我们可以得出一个结论：<strong>一个线程只拥有一个Looper对象</strong></p>
+<p>问题来了，我们在主线程中创建Handler的时候并没有看到有调用过Looper.prepare方法呀，它是什么时候调用来初始化Looper的，于是我们就要进入framework的ActivityThread类中寻找答案了。</p>
+<pre><code class="language-java">public static void main(String[] args) {
+        ...
+
+        Looper.prepareMainLooper();
+
+        ActivityThread thread = new ActivityThread();
+        thread.attach(false);
+
+        if (sMainThreadHandler == null) {
+            sMainThreadHandler = thread.getHandler();
+        }
+
+        AsyncTask.init();
+
+        if (false) {
+            Looper.myLooper().setMessageLogging(new
+                    LogPrinter(Log.DEBUG, &quot;ActivityThread&quot;));
+        }
+
+        Looper.loop();
+
+        throw new RuntimeException(&quot;Main thread loop unexpectedly exited&quot;);
+    }
+</code></pre>
+<p>真相只有一个，我们在主线程的main入口方法中可以看到<em>Looper.prepareMainLooper</em>方法，这个方法跟prepare类似，只是加了一点特殊的地方：</p>
+<pre><code class="language-java">/**
+     * Initialize the current thread as a looper, marking it as an
+     * application's main looper. The main looper for your application
+     * is created by the Android environment, so you should never need
+     * to call this function yourself.  See also: {@link #prepare()}
+     */
+    public static void prepareMainLooper() {
+        prepare(false);
+        synchronized (Looper.class) {
+            if (sMainLooper != null) {
+                throw new IllegalStateException(&quot;The main Looper has already been prepared.&quot;);
+            }
+            sMainLooper = myLooper();
+        }
+    }
+
+    /** Returns the application's main looper, which lives in the main thread of the application.
+     */
+    public static Looper getMainLooper() {
+        synchronized (Looper.class) {
+            return sMainLooper;
+        }
+    }
+</code></pre>
+<p>我们可以直接通过getMainLooper来获得主线程拥有的那个Looper了，Handler有个构造方法可以接受一个Looper，我们可以把MainLooper传进去，就可以将消息send到MainLooper维护的MessageQueue中，来完成到主线程的切换了。</p>
+<p>在main方法的最后我们可以看到调用了Looper.loop()方法，这里开始循环读取msg，在当前线程执行逻辑了。</p>
+<pre><code class="language-java"> /**
+     * Run the message queue in this thread. Be sure to call
+     * {@link #quit()} to end the loop.
+     */
+    public static void loop() {
+        final Looper me = myLooper();
+        if (me == null) {
+            throw new RuntimeException(&quot;No Looper; Looper.prepare() wasn't called on this thread.&quot;);
+        }
+        final MessageQueue queue = me.mQueue;
+
+        // Make sure the identity of this thread is that of the local process,
+        // and keep track of what that identity token actually is.
+        Binder.clearCallingIdentity();
+        final long ident = Binder.clearCallingIdentity();
+
+        for (;;) {
+            Message msg = queue.next(); // might block
+            if (msg == null) {
+                // No message indicates that the message queue is quitting.
+                return;
+            }
+
+            // This must be in a local variable, in case a UI event sets the logger
+            Printer logging = me.mLogging;
+            if (logging != null) {
+                logging.println(&quot;&gt;&gt;&gt;&gt;&gt; Dispatching to &quot; + msg.target + &quot; &quot; +
+                        msg.callback + &quot;: &quot; + msg.what);
+            }
+
+            msg.target.dispatchMessage(msg);
+
+            if (logging != null) {
+                logging.println(&quot;&lt;&lt;&lt;&lt;&lt; Finished to &quot; + msg.target + &quot; &quot; + msg.callback);
+            }
+
+            // Make sure that during the course of dispatching the
+            // identity of the thread wasn't corrupted.
+            final long newIdent = Binder.clearCallingIdentity();
+            if (ident != newIdent) {
+                Log.wtf(TAG, &quot;Thread identity changed from 0x&quot;
+                        + Long.toHexString(ident) + &quot; to 0x&quot;
+                        + Long.toHexString(newIdent) + &quot; while dispatching to &quot;
+                        + msg.target.getClass().getName() + &quot; &quot;
+                        + msg.callback + &quot; what=&quot; + msg.what);
+            }
+
+            msg.recycle();
+        }
+    }
+</code></pre>
+<p>读取消息这一块没什么说的，内部有一个死循环一直在阻塞读取消息队列中的数据，然后通过<strong>msg.target.dispatchMessage(msg);</strong> 调用到目标handler中去。于是，不管msg来自哪个线程，最终的逻辑处理都会切换到Looper.loop()执行所在的线程中。diapatchMessage分发消息源码如下：</p>
+<pre><code class="language-java">/**
+     * Handle system messages here.
+     */
+    public void dispatchMessage(Message msg) {
+        if (msg.callback != null) {
+            handleCallback(msg);
+        } else {
+            if (mCallback != null) {
+                if (mCallback.handleMessage(msg)) {
+                    return;
+                }
+            }
+            handleMessage(msg);
+        }
+    }
+</code></pre>
+<p>从中也可以得到一些有用的信息，其实我们平常写的handleMessage()是在第三种情况才会调用到的。第一种情况是Handler#post(Runnable)，msg.callback就是runnable对象。第二种情况是在构造方法中可以传一个Callback对象，用在有些情况下，不想继承Handler实现一个子类重写handleMessage，可以直接传此参数完成回调。</p>
+<h2 id="总结">总结</h2>
+<p>整个Handle消息机制就是这样，逻辑上非常清晰，以后写Handler的时候，脑子就更加清晰，它们的整个流程关系是怎样了，说不定还可以解决一些模糊的问题，知其然所以然了~</p>
+<p>大家也许会明白在子线程使用Handler要做的几个步骤的所以然了</p>
+<pre><code class="language-java">new Thread(){
+		@Override
+		public void run() {
+			super.run();
+			Looper.prepare();
+			Handler myHandler = new Handler();
+			Looper.loop();
+		}
+	}.start();
+</code></pre>
+<h2 id="参考">参考</h2>
+<p>《Android开发艺术探索》一书</p>
+<p>Android源码</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[线程池的使用总结]]></title>
+        <id>https://monkeylmj.github.io//post/tread-pool</id>
+        <link href="https://monkeylmj.github.io//post/tread-pool">
+        </link>
+        <updated>2016-03-07T12:08:50.000Z</updated>
+        <summary type="html"><![CDATA[<p>本篇是对Java线程池使用的总结，系统记录下线程池的用法。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本篇是对Java线程池使用的总结，系统记录下线程池的用法。</p>
+<!-- more -->
+<h2 id="为什么使用线程池">为什么使用线程池？</h2>
+<ol>
+<li>
+<p>相比于每次都创建新的Thread，通过重用线程池中的线程，减少了创建线程和销毁线程带来的性能开销。</p>
+</li>
+<li>
+<p>对线程进行管理控制，控制线程并发数量、定时执行、间隔执行等。</p>
+</li>
+</ol>
+<h2 id="java线程池模型的uml类图">Java线程池模型的UML类图</h2>
+<p><img src="https://i.loli.net/2018/08/04/5b65c33dcf4aa.png" alt=""></p>
+<p>其中 <strong>ThreadPoolExecutor</strong> 是线程池的真正实现，从构造方法中可以看出其创建的细节和需要配置的参数</p>
+<pre><code class="language-java">
+public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue&lt;Runnable&gt; workQueue,
+                          ThreadFactory threadFactory,
+                          RejectedExecutionHandler handler) {...}
+
+</code></pre>
+<p>下面对每个参数进行解释：</p>
+<ul>
+<li>
+<p><strong>corePoolSize</strong>: 线程池的核心线程数，默认情况下创建的核心线程不会被销毁，除非设置ThreadPoolExecutor#allowCoreThreadTimeOut为true,则根据keepAliveTime指定的超时时长进行销毁。</p>
+</li>
+<li>
+<p><strong>maximumPoolSize</strong>: 线程池容纳的最大线程数（<em>除了核心线程，剩下的为非核心线程</em>），线程池中运行的线程不能超过此数量。</p>
+</li>
+<li>
+<p><strong>keepAliveTime</strong>: 非核心线程闲置时的超时时长，超过此时间，非核心线程会被销毁，如果设置ThreadPoolExecutor#allowCoreThreadTimeOut为true，这核心线程也享有此特性。</p>
+</li>
+<li>
+<p><strong>unit</strong>: 超时时长的时间单位。</p>
+</li>
+<li>
+<p><strong>workQueue</strong>: 缓存的任务队列，当添加的任务数量大于corePoolSize时，任务将会被添加到此队列中进行缓存。</p>
+</li>
+<li>
+<p><strong>threadFactory</strong>:线程池用来创建线程的工厂类，只有一个<strong>newThread(Runnable r)</strong> 的接口方法。</p>
+</li>
+<li>
+<p><strong>RejectedExecutionHandler</strong>: 拒绝策略。当线程池中的线程达到最大线程数并且缓存任务队列已满，会调用此对象来进行处理。</p>
+<p>RejectedExecutionHandler是一个接口，</p>
+<pre><code class="language-java">public interface RejectedExecutionHandler {
+    void rejectedExecution(Runnable r, ThreadPoolExecutor executor);
+}
+</code></pre>
+<p>有四个实现类，对应4种处理策略，从源码中可以看出他们的作用：</p>
+<p><strong>AbortPolicy</strong> 丢弃当前添加的任务并且抛出RejectedExecutionException异常</p>
+<p><strong>DiscardPolicy</strong> 丢弃当前添加的任务，但是不抛出异常</p>
+<p><strong>DiscardOldestPolicy</strong> 丢弃最老的任务，也就是任务队列队首的任务，然后再尝试执行当前添加的任务</p>
+<p><strong>CallerRunsPolicy</strong> 由调用线程处理该任务</p>
+</li>
+</ul>
+<h2 id="线程池的执行策略">线程池的执行策略</h2>
+<ol>
+<li>
+<p>如果线程池中的线程数量&lt;核心线程数量，直接创建一个核心线程执行该任务。</p>
+</li>
+<li>
+<p>如果线程池中的线程数量&gt;=核心线程数量，则将任务插入到缓存任务队列中，如上 <strong>workQueue</strong> 参数指定的队列中。</p>
+</li>
+<li>
+<p>如果缓存任务队列已满不能继续添加任务，并且线程池中的线程数量&lt;最大线程数，则创建一个非核心线程来执行该任务。</p>
+</li>
+<li>
+<p>如果缓存任务队列和线程池均已满，则调用 <strong>RejectedExecutionHandler#rejectedExecution</strong> 进行处理。</p>
+</li>
+</ol>
+<p><strong>另外：</strong></p>
+<ul>
+<li>
+<p>如果线程池中的线程执行任务完毕从而闲置，则从缓存任务队列头取出一个任务，继续进行执行。（<strong>优点一，重用已经创建的线程</strong>）</p>
+</li>
+<li>
+<p>如果线程池中线程闲置，并且缓存队列中已经没有任务，则线程池会根据超时规则进行线程的销毁。一般情况下，核心线程不进行销毁，非核心线程根据设置的超时间长进行销毁。</p>
+</li>
+<li>
+<p>处理任务的优先级： 核心线程池 &gt; 缓存任务队列 &gt; 非核心线程池</p>
+</li>
+</ul>
+<h2 id="常用的4种线程池模型">常用的4种线程池模型</h2>
+<p><strong>Executors</strong> 提供了几个静态工厂方法来创建几种不同特性的线程池，本质上就是通过配置ThreadPoolExecutor构造方法的参数组合，实现具有不同特性的ThreadPool。</p>
+<h4 id="1-fixedthreadpool">1、FixedThreadPool</h4>
+<p>固定线程数量的线程池</p>
+<pre><code class="language-java">
+public static ExecutorService newFixedThreadPool(int nThreads) {
+    return new ThreadPoolExecutor(nThreads, nThreads,
+                                  0L, TimeUnit.MILLISECONDS,
+                                  new LinkedBlockingQueue&lt;Runnable&gt;());
+}
+
+</code></pre>
+<p>从ThreadPoolExecutor的构造方法参数中可以看出，FixedThreadPool 中只有核心线程。当核心线程用完后，新添加的任务进入任务队列<strong>new LinkedBlockingQueue<Runnable>()</strong> 中：</p>
+<pre><code class="language-java">public LinkedBlockingQueue() {
+    this(Integer.MAX_VALUE);
+}
+</code></pre>
+<p>默认的构造方法创建了一个无限大的队列，所以我们可以添加任意数目的任务，但是最大并发数只是<em>nThreads</em>。</p>
+<p>前面说过，默认情况下，核心线程是不会销毁的，即使它们执行完任务变为空闲状态，这样带来的好处是可以快速响应之后添加的新任务（免去了创建线程的性能开销）。</p>
+<p>但是可能带来一些意想不到的问题，比如<strong>内存泄露</strong>。之前在进行Andorid项目的性能优化时就遇到过线程池带来的内存泄露，正是由于线程池中的核心线程持有了外部的对象（View、Activity等）,并且自身不会主动销毁，导致Activity等持有的其他大对象迟迟不能被GC回收，内存泄露。</p>
+<p>当然，有解决方案：</p>
+<p><strong>ThreadPoolExecutor#shutdown()</strong> 关闭线程池。</p>
+<p>调用此方法后，ExecutorService不会立即关闭，但是不再接受新的任务，直到所有线程都执行完毕才会关闭，所有在shutdown执行前提交的任务都会得到执行。</p>
+<p><strong>ThreadPoolExecutor#shutdownNow()</strong> 立即关闭线程池。</p>
+<p>调用此方法，会尝试关闭所有正在执行的任务（但是不能做任何的保证，它们可能都停止，也可能都完成），跳过正在等待的任务。</p>
+<p>最后，使用弱引用的方式持有外部对象也是一个保险的做法。</p>
+<h4 id="2-cachedthreadpool">2、CachedThreadPool</h4>
+<p>线程数量不定的线程池</p>
+<pre><code class="language-java">public static ExecutorService newCachedThreadPool() {
+   return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                 60L, TimeUnit.SECONDS,
+                                 new SynchronousQueue&lt;Runnable&gt;());
+}
+</code></pre>
+<p>同样，从构造方法参数中可以看出，CachedThreadPool没有核心线程池，最大线程数量为无限大，也就是可以并发执行任意数目的线程（超时销毁时长为60s)。</p>
+<p>其中 <strong>new SynchronousQueue<Runnable>()</strong> 是一个特殊的任务队列，可以理解为一个管道，只能通过任务，不能存储任何任务，这就导致所有插入的任务都会立即得到执行。</p>
+<p>从此线程池的特性看来，这类线程池比较适合执行大量的耗时较少的任务。一方面，线程的并发数量是无限的。另一方面，60s的超时时长保证闲置的线程销毁，最终整个线程池不包含任何线程，不占用系统宝贵资源。</p>
+<h4 id="3-singlethreadexecutor">3、SingleThreadExecutor</h4>
+<p>只有一个核心线程的线程池</p>
+<pre><code class="language-java">public static ExecutorService newSingleThreadExecutor() {
+    return new FinalizableDelegatedExecutorService
+        (new ThreadPoolExecutor(1, 1,
+                                0L, TimeUnit.MILLISECONDS,
+                                new LinkedBlockingQueue&lt;Runnable&gt;()));
+}
+</code></pre>
+<p>跟FixedThreadPool类似，只是<strong>nThreads</strong>固定为1，算是它的一个特例。确保了所有任务都在同一个线程按顺序同步执行，这里不再多述。</p>
+<h4 id="4-scheduledthreadpool">4、ScheduledThreadPool</h4>
+<p>进行定时以及周期性任务执行的线程池</p>
+<pre><code class="language-java">public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
+    return new ScheduledThreadPoolExecutor(corePoolSize);
+}
+</code></pre>
+<pre><code class="language-java">public ScheduledThreadPoolExecutor(int corePoolSize) {
+    super(corePoolSize, Integer.MAX_VALUE,
+          DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
+          new DelayedWorkQueue());
+}
+</code></pre>
+<p>从UML类图中，可以看出此类线程池的特殊之处-实现了<strong>ScheduledExecutorService</strong>接口，此接口中主要定义如下几个接口方法：</p>
+<pre><code class="language-java">/**
+ * 延时delay后执行command
+ */
+public ScheduledFuture&lt;?&gt; schedule(Runnable command, long delay, TimeUnit unit);
+
+public &lt;V&gt; ScheduledFuture&lt;V&gt; schedule(Callable&lt;V&gt; callable, long delay, TimeUnit unit);
+
+/**
+ * 初始延时initialDelay后，每隔period执行一次command
+ */
+public ScheduledFuture&lt;?&gt; scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit);
+
+public ScheduledFuture&lt;?&gt; scheduleWithFixedDelay(Runnable command, long initialDelay,long delay,TimeUnit unit);
+</code></pre>
+<p>使用此类线程池可以定时执行任务和固定周期重复执行任务。</p>
 ]]></content>
     </entry>
 </feed>

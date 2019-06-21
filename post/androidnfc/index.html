@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Android NFC开发入门 | 猴子公园</title>
+<meta name="description" content="温故而知新">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561126091642">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://monkeylmj.github.io/">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561126091642" class="site-logo">
+        <h1 class="site-title">猴子公园</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="https://monkeylmj.github.io/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//post/about/" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Android NFC开发入门</h2>
+            <div class="post-date">2017-02-28</div>
+            
+            <div class="post-content">
+              <p>总结一下Android中NFC开发相关的知识点。</p>
+<!-- more -->
+<h2 id="nfc的几个概念">NFC的几个概念</h2>
+<ul>
+<li>
+<p><strong>接触式IC卡</strong> 例如手机SIM卡、金融IC卡。</p>
+</li>
+<li>
+<p><strong>非接触式IC卡</strong> 又称射频卡，将无线射频识别技术和IC卡结合起来，免接触。</p>
+</li>
+<li>
+<p><strong>RFID</strong> 无线射频识别，一种无线通讯技术。</p>
+<p>基本原理：阅读器将电信号转换为无线电信号（电磁波的一个频带）发给标签，标签使用接收到的无线电波能量供电，然后将存储在自身数据以无线电信号的形式应答给阅读器，以读取到标签中的数据。</p>
+</li>
+<li>
+<p><strong>NFC</strong>（Near Field Communication） 短距离无线通讯技术，基于RFID，一般在10cm之内使用13.56MHz频率通讯</p>
+</li>
+</ul>
+<hr>
+<h2 id="android如何使用nfc">Android如何使用NFC</h2>
+<h3 id="权限声明">权限声明</h3>
+<p>在AndroidManifest.xml中如下申请NFC权限:</p>
+<pre><code class="language-xml">&lt;uses-permission android:name=&quot;android.permission.NFC&quot; /&gt;
+</code></pre>
+<p>添加下面一行，保证在GooglePlay商店此应用只显示给带NFC硬件的设备</p>
+<pre><code class="language-xml">&lt;uses-feature android:name=&quot;android.hardware.nfc&quot; android:required=&quot;true&quot; /&gt;
+</code></pre>
+<p>在代码中动态判断设备是否支持NFC：</p>
+<pre><code class="language-java">if(NfcAdapter.getDefaultAdapter() == null){
+  Log.v(&quot;monkey&quot;,&quot;设备不支持NFC.&quot;);
+}
+</code></pre>
+<h3 id="nfc的三种模式">NFC的三种模式</h3>
+<ol>
+<li><strong>Reader/writer mode</strong> 通过Android设备对NFC标签进行读写数据操作。</li>
+<li><strong>P2P mode</strong> NFC设备之间交换数据，AndroidBeam使用这种模式。</li>
+<li><strong>Card emulation mode</strong> NFC设备模拟成NFC标签。</li>
+</ol>
+<h2 id="readerwrite-mode">Reader/write mode</h2>
+<p>Android通过标签分发系统分析发现的NFC标签，封装成对应的Intent发给Android上层进行对应的处理。</p>
+<p>Android中关于NFC有三种类型的Action（优先级由高到低）：</p>
+<p><code>ACTION_NDEF_DISCOVERED</code> <code>ACTION_TECH_DISCOVERED</code> <code>ACTION_TAG_DISCOVERED</code></p>
+<p>这里的<em>优先级</em>可以通过标签分发系统的机制来解释:</p>
+<ol>
+<li>如果一个包含<strong>NDEF</strong>格式数据的NFC标签被发现，Android优先发送带<code>ACTION_NDEF_DISCOVERED</code>action的Intent。</li>
+<li>如果没有Activity处理<code>ACTION_NDEF_DISCOVERED</code>类型的intent <em>或者</em> NFC标签不包含<strong>NDEF</strong>格式的数据（使用了其他已知技术）<em>或者</em> <strong>NDEF</strong>格式的标签不能被标签分发系统映射成正确的Intent，则会发送优先级较低的<code>ACTION_TECH_DISCOVERED</code>intent来尝试启动Activity（不会发送<code>ACTION_NDEF_DISCOVERED</code>）。</li>
+<li>如果仍然没有Activity响应上述两个Action，则系统会发送优先级最低的<code>ACTION_TAG_DISCOVERED</code>的Intent。</li>
+</ol>
+<p>图为标签分发系统：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a184962704.png" alt=""></p>
+<h3 id="nfc数据格式">NFC数据格式</h3>
+<p>NFC的数据格式可以分为NDEF和非NDEF两种。<strong>NDEF</strong>是NFC Forum定义的一种标准格式，在Android中得到最大范围的支持，是Android最推荐使用的格式。</p>
+<ul>
+<li>
+<p><strong>NDEF数据</strong>在AndroidSDK中被封装成一个包含多个<strong>NdefRecord</strong>的<strong>NdefMessage</strong>，<strong>android.nfc.tech.Ndef</strong>类封装了各种便捷的读写数据的操作。</p>
+<p>前面说过当Android设备发现NDEF格式的标签之后会发出<code>ACTION_NDEF_DISCOVERED</code>类型的Intent。通常在intent中还会带上更加具体的mime type &amp; URI等数据，以便筛选更加具体的Activity来进行处理（这个是Android推荐使用这个格式的原因之一）。下面就来说说，NDEF具体的数据格式以及Android如何分析NDEF数据来生成对应的Intent。</p>
+<p><strong>NDEF数据格式</strong>：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a185c4e7fc.png" alt=""></p>
+<ol>
+<li><strong>TNF</strong> 3bits的字段，标识了如何解析第二个字段type。包含的值见表一：</li>
+</ol>
+<p>表一，TNF字段以及映射：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">TNF</th>
+<th>映射的Intent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">TNF_ABSOLUTE_URI</td>
+<td>基于<em>type</em>的URI</td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_EMPTY</td>
+<td>无映射，降级到<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_EXTERNAL_TYPE</td>
+<td>基于<em>type</em>的URI. type形式为 <domain>:<service>。映射后的URI形式为： <code>vnd.android.nfc://ext/&lt;domain&gt;:&lt;service&gt;</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_MIME_MEDIA</td>
+<td>基于type的MIME类型</td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_UNCHANGED</td>
+<td>无效，降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_UNKNOWN</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td style="text-align:left">TNF_WELL_KNOWN</td>
+<td>基于type（RTD)的MIME type or URI ，需要再根据type的值进行映射（见表二）</td>
+</tr>
+</tbody>
+</table>
+<p>表二，RTDs for TNF_WELL_KNOWN以及映射：</p>
+<table>
+<thead>
+<tr>
+<th>RTD</th>
+<th>映射的Intent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTD_ALTERNATIVE_CARRIER</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td>RTD_HANDOVER_CARRIER</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td>RTD_HANDOVER_REQUEST</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td>RTD_HANDOVER_SELECT</td>
+<td>降级为<code>ACTION_TECH_DISCOVERED</code></td>
+</tr>
+<tr>
+<td>RTD_SMART_POSTER</td>
+<td>基于解析payload的URI</td>
+</tr>
+<tr>
+<td>RTD_TEXT</td>
+<td>MIME类型 text/p</td>
+</tr>
+<tr>
+<td>RTD_URI</td>
+<td>基于payloadd的URI</td>
+</tr>
+</tbody>
+</table>
+<ol start="2">
+<li><strong>type</strong>,描述Record的类型，如果TNF为TNF_WELL_KNOWN，则这个字段指定RTD，见上表二。</li>
+<li><strong>ID</strong>，字段的唯一标识，一般不常用，可以用来标识一张标签。</li>
+<li><strong>payload</strong>，有效荷载，保存真实的数据。</li>
+</ol>
+<p><strong>创建各种类型的NDEF数据&amp;响应对应NDEF 数据的IntentFilter实例</strong></p>
+<ol>
+<li>创建TNF_ABSOLUTE_URI类型数据:</li>
+</ol>
+</li>
+</ul>
+<pre><code class="language-java">	NdefRecord uriRecord = new NdefRecord(
+    NdefRecord.TNF_ABSOLUTE_URI ,
+    &quot;http://developer.android.com/index.html&quot;.getBytes(Charset.forName(&quot;US-ASCII&quot;)),
+    new byte[0], new byte[0]);
+</code></pre>
+<p>​	响应的intent filter：</p>
+<pre><code class="language-xml">&lt;intent-filter&gt;
+    &lt;action android:name=&quot;android.nfc.action.NDEF_DISCOVERED&quot; /&gt;
+    &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;
+    &lt;data android:scheme=&quot;http&quot;
+        android:host=&quot;developer.android.com&quot;
+        android:pathPrefix=&quot;/index.html&quot; /&gt;
+&lt;/intent-filter&gt;
+</code></pre>
+<p>​	2. 创建TNF_MIME_MEDIA类型的数据：</p>
+<pre><code class="language-java">  NdefRecord mimeRecord = NdefRecord.createMime(&quot;application/vnd.com.example.android.beam&quot;,
+      &quot;Beam me up, Android&quot;.getBytes(Charset.forName(&quot;US-ASCII&quot;)));
+</code></pre>
+<pre><code>对应的intent filter:
+</code></pre>
+<pre><code class="language-xml">  &lt;intent-filter&gt;
+      &lt;action android:name=&quot;android.nfc.action.NDEF_DISCOVERED&quot; /&gt;
+      &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;
+      &lt;data android:mimeType=&quot;application/vnd.com.example.android.beam&quot; /&gt;
+  &lt;/intent-filter&gt;
+</code></pre>
+<p>​	3. 创建TNF_EXTERNAL_TYPE类型的数据:</p>
+<pre><code class="language-java">  byte[] payload; //assign to your data
+  String domain = &quot;com.example&quot;; //usually your app's package name
+  String type = &quot;externalType&quot;;
+  NdefRecord extRecord = NdefRecord.createExternal(domain, type, payload);
+</code></pre>
+<pre><code>对应的intent filter:
+</code></pre>
+<pre><code class="language-xml">  &lt;intent-filter&gt;
+      &lt;action android:name=&quot;android.nfc.action.NDEF_DISCOVERED&quot; /&gt;
+      &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;
+      &lt;data android:scheme=&quot;vnd.android.nfc&quot;
+          android:host=&quot;ext&quot;
+          android:pathPrefix=&quot;/com.example:externalType&quot;/&gt;
+  &lt;/intent-filter&gt;
+</code></pre>
+<p>​	4. 创建TNF_WELL_KNOWN with RTD_TEXT类型的数据：</p>
+<pre><code class="language-java">public NdefRecord createTextRecord(String payload, Locale locale, boolean encodeInUtf8) {
+    byte[] langBytes = locale.getLanguage().getBytes(Charset.forName(&quot;US-ASCII&quot;));
+    Charset utfEncoding = encodeInUtf8 ? Charset.forName(&quot;UTF-8&quot;) : Charset.forName(&quot;UTF-16&quot;);
+    byte[] textBytes = payload.getBytes(utfEncoding);
+    int utfBit = encodeInUtf8 ? 0 : (1 &lt;&lt; 7);
+    char status = (char) (utfBit + langBytes.length);
+    byte[] data = new byte[1 + langBytes.length + textBytes.length];
+    data[0] = (byte) status;
+    System.arraycopy(langBytes, 0, data, 1, langBytes.length);
+    System.arraycopy(textBytes, 0, data, 1 + langBytes.length, textBytes.length);
+    NdefRecord record = new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+    NdefRecord.RTD_TEXT, new byte[0], data);
+    return record;
+}
+</code></pre>
+<p>​	对应的Intent filter:</p>
+<pre><code class="language-xml">&lt;intent-filter&gt;
+    &lt;action android:name=&quot;android.nfc.action.NDEF_DISCOVERED&quot; /&gt;
+    &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;
+    &lt;data android:mimeType=&quot;text/plain&quot; /&gt;
+&lt;/intent-filter&gt;
+
+</code></pre>
+<p>​</p>
+<p>​	<strong>读写NDEF格式的NFC数据</strong>：</p>
+<p>​	1. Intent中包含三个相关的数据：</p>
+<p>​	<strong>EXTRA_TAG</strong> 扫描到的标签对象</p>
+<p>​	<strong>EXTRA_NDEF_MESSAGES</strong> 从标签中获取到的NDEF数据对象，只有ACTION_NDEF_DISCOVERED类型的				Intent包含</p>
+<p>​	<strong>EXTRA_ID</strong> 标签的ID（可选）</p>
+<p>​	2 .解析NDEF数据的代码一般为：</p>
+<pre><code class="language-java">@Override
+protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    ...
+    if (intent != null &amp;&amp; NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+        Parcelable[] rawMessages =
+            intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+        if (rawMessages != null) {
+            NdefMessage[] messages = new NdefMessage[rawMessages.length];
+            for (int i = 0; i &lt; rawMessages.length; i++) {
+                messages[i] = (NdefMessage) rawMessages[i];
+            }
+            // Process the messages array.
+            ...
+        }
+    }
+}
+</code></pre>
+<p>​	写NDEF数据的代码一般为：</p>
+<pre><code class="language-java"> @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        NdefRecord ndefRecord = NdefRecord.createExternal(&quot;domain&quot;, &quot;service&quot;, &quot;content&quot;.getBytes());
+        NdefMessage ndefMessage = new NdefMessage(new NdefRecord[] {ndefRecord});
+        Ndef ndef = Ndef.get(tag); //获取Ndef tech的对象
+        if (ndef != null) { //非NDEF数据
+            try {
+                ndef.connect();
+                ndef.writeNdefMessage(ndefMessage);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (FormatException e) {
+                e.printStackTrace();
+            }
+        } else { //可格式化为NDEF数据
+            NdefFormatable ndefFormatable = NdefFormatable.get(tag);
+            if (ndefFormatable != null) {
+                try {
+                    ndefFormatable.connect();
+                    ndefFormatable.format(ndefMessage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (FormatException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+</code></pre>
+<p>​</p>
+<ul>
+<li>
+<p><strong>非NDEF数据</strong>可以配合<strong>android.nfc.tech</strong>包下的对应的类来进行使用。</p>
+<p>每个NFC标签可能支持不同种类的<strong>technologies</strong>(不同格式数据的读写），可以通过如下代码获取标签支持的<strong>techonologies</strong>:</p>
+</li>
+</ul>
+<pre><code class="language-java">  mTag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+  String[] teches = mTag.getTechList();
+</code></pre>
+<p>Android支持的常见Technology如下表：</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TagTechnology</code></td>
+<td>The interface that all tag technology classes must implement.</td>
+</tr>
+<tr>
+<td><code>NfcA</code></td>
+<td>Provides access to NFC-A (ISO 14443-3A) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>NfcB</code></td>
+<td>Provides access to NFC-B (ISO 14443-3B) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>NfcF</code></td>
+<td>Provides access to NFC-F (JIS 6319-4) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>NfcV</code></td>
+<td>Provides access to NFC-V (ISO 15693) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>IsoDep</code></td>
+<td>Provides access to ISO-DEP (ISO 14443-4) properties and I/O operations.</td>
+</tr>
+<tr>
+<td><code>Ndef</code></td>
+<td>Provides access to NDEF data and operations on NFC tags that have been formatted as NDEF.</td>
+</tr>
+<tr>
+<td><code>NdefFormatable</code></td>
+<td>Provides a format operations for tags that may be NDEF formattable.</td>
+</tr>
+</tbody>
+</table>
+<p>Android设备可选支持的Technology：</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MifareClassic</code></td>
+<td>Provides access to MIFARE Classic properties and I/O operations, if this Android device supports MIFARE.</td>
+</tr>
+<tr>
+<td><code>MifareUltralight</code></td>
+<td>Provides access to MIFARE Ultralight properties and I/O operations, if this Android device supports MIFARE.</td>
+</tr>
+</tbody>
+</table>
+<p>前面讲解过，标签在某些情况下会降级为<code>ACTION_TECH_DISCOVERED</code>类型的Intent，对应的xml文件为:</p>
+<pre><code class="language-xml">&lt;activity&gt;
+...
+&lt;intent-filter&gt;
+    &lt;action android:name=&quot;android.nfc.action.TECH_DISCOVERED&quot;/&gt;
+&lt;/intent-filter&gt;
+
+&lt;meta-data android:name=&quot;android.nfc.action.TECH_DISCOVERED&quot;
+    android:resource=&quot;@xml/nfc_tech_filter&quot; /&gt;
+...
+&lt;/activity&gt;
+</code></pre>
+<p>其中**android:resource=&quot;@xml/nfc_tech_filter&quot;**指定NFC technology的过滤文件，放在<code>res/xml</code>目录下任意命名。其中指定的technologies必须是所识别的标签支持的technologies的子集，才能匹配到。例如：</p>
+<pre><code class="language-xml">&lt;resources xmlns:xliff=&quot;urn:oasis:names:tc:xliff:document:1.2&quot;&gt;
+    &lt;tech-list&gt;
+        &lt;tech&gt;android.nfc.tech.IsoDep&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NfcA&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NfcB&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NfcF&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NfcV&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.Ndef&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.NdefFormatable&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.MifareClassic&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.MifareUltralight&lt;/tech&gt;
+    &lt;/tech-list&gt;
+&lt;/resources&gt;
+</code></pre>
+<p>或者分开多个**<tech-list>**,他们之间相互独立，匹配一个就好。</p>
+<pre><code class="language-xml">&lt;resources xmlns:xliff=&quot;urn:oasis:names:tc:xliff:document:1.2&quot;&gt;
+    &lt;tech-list&gt;
+        &lt;tech&gt;android.nfc.tech.NfcA&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.Ndef&lt;/tech&gt;
+    &lt;/tech-list&gt;
+&lt;/resources&gt;
+
+&lt;resources xmlns:xliff=&quot;urn:oasis:names:tc:xliff:document:1.2&quot;&gt;
+    &lt;tech-list&gt;
+        &lt;tech&gt;android.nfc.tech.NfcB&lt;/tech&gt;
+        &lt;tech&gt;android.nfc.tech.Ndef&lt;/tech&gt;
+    &lt;/tech-list&gt;
+&lt;/resources&gt;
+</code></pre>
+<p><strong>各种类型的非NDEF数据格式的读写</strong></p>
+<p>查看对应的规格书按照协议来使用，在developer.android.com中可以简单地查看一种数据格式的说明：如 <a href="https://developer.android.com/reference/android/nfc/tech/MifareClassic.html">MIFAREClassic</a></p>
+<h2 id="p2p-mode">P2P mode</h2>
+<p>即AndroidBeam功能，使两台Android设备进行快速的数据交换。发送数据的设备打开发送数据的应用（相当于一张标签），接受数据的设备解锁靠近发送数据的设备之后，发送数据的设备UI显示“Touch to Beam&quot;,点击即可将数据发送给接收端（接收端设备接受到数据通过标签分发系统决定打开的应用进行处理）。</p>
+<p>相关的API有两个：</p>
+<p><strong>NfcAdapter.setNdefPushMessage()</strong> :发送端设置要发送的NDEF数据。两台设备靠近之后点击”Touch to Beam&quot;发送此数据。</p>
+<p><strong>NfcAdapter.setNdefPushMessageCallback()</strong>:此方法接受一个<strong>NfcAdapter.CreateNdefMessageCallback</strong>类型的回调接口，此接口在两台设备靠近时回调进行NDEF数据的创建，然后点击“Touch to Beam&quot;发送数据。</p>
+<p>两个接口的唯一不同在于：接口1一开始便确定了要发送的数据；接口2在两个设备靠近时才创建要发送的NDEF数据。</p>
+<p><em>代码示例</em>(Demo中onCreate中为发送端逻辑，onResume中为接收端处理逻辑):</p>
+<pre><code class="language-java">public class MainActivity extends AppCompatActivity {
+
+    private NfcAdapter mNfcAdapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        if (mNfcAdapter == null) {
+            Toast.makeText(this, &quot;not support nfc&quot;, Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        final NdefRecord ndefRecord = 		 NdefRecord.createMime(&quot;application/vnd.com.example.android.beam&quot;, &quot;hello android&quot;.getBytes());
+        mNfcAdapter.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
+            @Override
+            public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
+                Log.v(&quot;seewo&quot;, &quot;createNdefMessage&quot;);
+                return new NdefMessage(ndefRecord);
+            }
+        }, this);
+//        mNfcAdapter.setNdefPushMessage(new NdefMessage(ndefRecord), this); //接口一的实现
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //接收端的处理逻辑
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
+            processIntent(getIntent());
+        }
+    }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+        setIntent(intent);
+    }
+
+    void processIntent(Intent intent) {
+        Parcelable[] rawMessages = 		     intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+        NdefMessage msg = (NdefMessage) rawMessages[0];
+        String info = new String(msg.getRecords()[0].getPayload());
+        Toast.makeText(this, info, Toast.LENGTH_SHORT).show();
+    }
+}
+
+</code></pre>
+<h2 id="card-emulation-mode">Card emulation mode</h2>
+<p>Android4.4之前通过在Android设备中内置一个芯片来实现。通信路径如下图：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a1893b60b8.png" alt=""></p>
+<p>Android4.4之后可以通过纯软件模拟NFC卡。通信路径如下图：</p>
+<p><img src="https://i.loli.net/2019/03/02/5c7a189e94ec6.png" alt=""></p>
+<p>在Android上层程序只需实现一个服务，并且给服务绑定一个ID，便可以模拟成NFC卡，根据读卡器发出的ID响应数据。</p>
+<pre><code class="language-java">public class MyHostApduService extends HostApduService {
+    @Override
+    public byte[] processCommandApdu(byte[] apdu, Bundle extras) {
+       ...
+    }
+    @Override
+    public void onDeactivated(int reason) {
+       ...
+    }
+}
+</code></pre>
+<pre><code class="language-xml">&lt;service android:name=&quot;.MyHostApduService&quot; android:exported=&quot;true&quot;
+         android:permission=&quot;android.permission.BIND_NFC_SERVICE&quot;&gt;
+    &lt;intent-filter&gt;
+        &lt;action android:name=&quot;android.nfc.cardemulation.action.HOST_APDU_SERVICE&quot;/&gt;
+    &lt;/intent-filter&gt;
+    &lt;meta-data android:name=&quot;android.nfc.cardemulation.host_apdu_service&quot;
+               android:resource=&quot;@xml/apduservice&quot;/&gt;
+&lt;/service&gt;
+</code></pre>
+<pre><code class="language-xml">&lt;host-apdu-service xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+           android:description=&quot;@string/servicedesc&quot;
+           android:requireDeviceUnlock=&quot;false&quot;&gt;
+    &lt;aid-group android:description=&quot;@string/aiddescription&quot;
+               android:category=&quot;other&quot;&gt;
+        &lt;aid-filter android:name=&quot;F0010203040506&quot;/&gt;
+        &lt;aid-filter android:name=&quot;F0394148148100&quot;/&gt;
+    &lt;/aid-group&gt;
+&lt;/host-apdu-service&gt;
+</code></pre>
+<hr>
+<h2 id="相关资料">相关资料</h2>
+<p>1.NDEF数据解析实例：<a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">http</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note#</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">/</a></p>
+<p>2.AndnroidNFC官网介绍：<a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">https</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">://</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">developer.android.com/guide/topics/connectivity/nfc/index.html</a></p>
+<p>3.NFC相关的应用：NXPTagWriter、NXPTagInfo、MIFARE经典工具</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://monkeylmj.github.io//tag/nfc" class="tag">
+                    NFC
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://monkeylmj.github.io//post/handler">
+                  <h3 class="post-title">
+                    Android的消息机制-Handler
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'e9cdf34c05a98e6b38aa',
+        clientSecret: '5575ef73b184711f05560b414b117640a727edf7',
+        repo: 'monkeylmj.github.io',
+        owner: 'monkeylmj',
+        admin: ['monkeylmj'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

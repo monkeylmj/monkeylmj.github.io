@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Android性能优化 - 内存优化 | 猴子公园</title>
+<meta name="description" content="温故而知新">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561126091642">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://monkeylmj.github.io/">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561126091642" class="site-logo">
+        <h1 class="site-title">猴子公园</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="https://monkeylmj.github.io/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//post/about/" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Android性能优化 - 内存优化</h2>
+            <div class="post-date">2019-03-08</div>
+            
+            <div class="post-content">
+              <p>在内存方面我们通常会遇到几个问题：内存空间占用过大、内存泄露、内存溢出、内存抖动等。</p>
+<!-- more-->
+<h2 id="1-为什么要做内存优化">1. 为什么要做内存优化</h2>
+<ul>
+<li>
+<p>避免OOM导致应用崩溃，提高应用稳定性</p>
+</li>
+<li>
+<p>内存资源是有限的，避免系统内存不足导致LowMemoryKiller机制触发杀死应用</p>
+</li>
+</ul>
+<h3 id="11-oom是什么">1.1 OOM是什么?</h3>
+<p>Android中定义了一个进程的内存上限，超过之后便会OOM崩溃。</p>
+<p>上限值可通过系统属性查看：</p>
+<p><img src="https://i.loli.net/2019/03/08/5c821d02c5790.png" alt=""></p>
+<p>第一个属性为一个标准应用能申请的最大内存。</p>
+<p>第二个属性为应用添加<strong>largeHeap=true</strong>之后能够申请的最大内存。</p>
+<h3 id="12-lowmemorykiller机制">1.2 LowMemoryKiller机制</h3>
+<p>####进程优先级</p>
+<p>当系统空间不足时，会按照进程的优先级对进程进行回收来腾出更多的空间给有需要的进程使用。</p>
+<p>Android中进程按优先级大概分为几个类型，优先级从高到底依次为：</p>
+<p><img src="https://i.loli.net/2019/03/08/5c821da6d4587.png" alt=""></p>
+<p><strong>前台进程</strong>：正在与用户交互，Activity Service BroadcastReceiver正在交互。Service</p>
+<p>是在前台运行的</p>
+<p><strong>可见进程</strong>：onPause状态的Activity 或 进程持有的Service与前台或者可见Activity绑定</p>
+<p><strong>服务进程</strong>：进程运行着一个不可见的Service，比如后台播放音乐等</p>
+<p><strong>后台进程</strong>：Home键退到后台时，进程持有一个stop的Activity。</p>
+<p><strong>空进程</strong>：一个进程不包含任何活跃的组件，缓存下来为了下次更快地启动。</p>
+<p>上面只是一个大概的分类，ActivityManagerService会对进程进行评分，确定一个oom_adj值，进程回收时LowerMemoryKiller会根据这个评分进行判断</p>
+<p>当内存达到阈值时，会根据oom_adj和进程所占内存的大小来杀死进程。</p>
+<p>oom_adj相同的话，内存占用大的进程会优先被杀死。</p>
+<h4 id="保活方法">保活方法</h4>
+<p>为了提高应用打开的速度，或者保证自己的核心应用不被杀死（比如OSService）。</p>
+<p>按照策略：</p>
+<p><strong>提高进程优先级，保证不被杀死</strong></p>
+<p>1、开启前台service，比如播放音乐的通知栏</p>
+<p>2、利用系统漏洞开启前台service（不显示通知）</p>
+<pre><code class="language-java"> @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (Build.VERSION.SDK_INT &lt; 18) {
+            startForeground(GRAY_SERVICE_ID, new Notification());//API &lt; 18 ，此方法能有效隐藏Notification上的图标
+        } else {
+            Intent innerIntent = new Intent(this, GrayInnerService.class);
+            startService(innerIntent);
+            startForeground(GRAY_SERVICE_ID, new Notification());
+        }
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+</code></pre>
+<p>3、1像素Activity</p>
+<p>4、系统应用添加persist=true属性</p>
+<p>5、内存优化，减少内存占用</p>
+<p><strong>应用被杀死之后，重新拉活</strong></p>
+<p>1、Service#onStartCommand返回STICKY。</p>
+<p>2、监听广播拉活（系统广播、应用全家桶、推送服务等）</p>
+<p>3、双进程守护</p>
+<p>4、JobScheduler（5.0+）</p>
+<p>...</p>
+<h2 id="2-常见的内存问题">2. 常见的内存问题</h2>
+<p>###2.1 GC机制
+<img src="https://i.loli.net/2019/03/08/5c821e6d2bf4c.png" alt=""></p>
+<p>JVM中从GC Roots对象开始遍历进行可达性分析，对于不可达的对象在GC时被标记回收。</p>
+<p>在Java语言里，可作为GC Roots对象的包括如下几种：</p>
+<p>a.虚拟机栈(栈桢中的本地变量表)中的引用的对象</p>
+<p>b.方法区中的类静态属性引用的对象</p>
+<p>c.方法区中的常量引用的对象</p>
+<p>d.本地方法栈中JNI的引用的对象</p>
+<p>摘自《深入理解Java虚拟机》</p>
+<h3 id="22-内存泄露">2.2 内存泄露</h3>
+<p>导致OOM的最主要原因。</p>
+<p>内存泄露是指进程分配的内存由于某些原因无法被释放，一般是长生命周期的对象强引用了短生命周期的对象。</p>
+<p><strong>常见内存泄露原因</strong>：</p>
+<ul>
+<li>
+<p>单例：引用了生命周期较短的对象</p>
+</li>
+<li>
+<p>静态变量</p>
+</li>
+<li>
+<p>非静态内部类和匿名内部类（引用外部类对象）</p>
+</li>
+<li>
+<p>资源使用后未释放</p>
+<p>IO、Cursor等资源使用后要及时关闭，释放缓冲对象、
+广播注册，取消注册成对出现、
+WebView用完之后destory</p>
+</li>
+<li>
+<p>异步操作在界面退出后没有停止</p>
+<p>MVP架构P层进行异步操作，退出时没有释放V层</p>
+</li>
+</ul>
+<h3 id="23-内存占用过大">2.3 内存占用过大</h3>
+<ul>
+<li>图片的使用（最主要的原因）</li>
+</ul>
+<blockquote>
+<p>Q: 一张20KB的png图片放在ImageView上占用多大的内存空间?</p>
+<p>A: 跟图片在apk中的资源文件夹dpi和目标设备dpi有关，跟ImageView的大小和png图片本身的大小无关。</p>
+<p>公式为: widthPx * heightPx  * targetDpi / inDpi * targetDpi/inDpi * 颜色深度</p>
+<p>详见: <a href="https://mp.weixin.qq.com/s?__biz=MzA3NTYzODYzMg==&amp;mid=403263974&amp;idx=1&amp;sn=b0315addbc47f3c38e65d9c633a12cd6&amp;scene=21#wechat_redirect">你的 Bitmap 究竟占多大内存？</a></p>
+</blockquote>
+<p>优化方案有:</p>
+<ol>
+<li>
+<p>使用合适尺寸的图片或者调整采样率（图片比View大时）</p>
+</li>
+<li>
+<p>图片格式RGB_555(没有透明通道）</p>
+</li>
+<li>
+<p>loading动画尽量用代码实现，减少图片</p>
+</li>
+<li>
+<p>Bitmap复用（参考Glide的BitmapPool实现）</p>
+</li>
+</ol>
+<ul>
+<li>
+<p>一些数据结构的优化</p>
+<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap、
+使用注解代替枚举类型等</p>
+</li>
+<li>
+<p>不好的代码</p>
+<p>使用ListView没有复用convertView、
+提前实例化用不到的对象</p>
+</li>
+</ul>
+<h3 id="24-内存抖动">2.4 内存抖动</h3>
+<p>内存短时间内大量地分配和回收，频繁的GC可能会导致卡顿问题。甚至会导致OOM。</p>
+<p>优化方案有：</p>
+<p>1、尽量避免在循环体内大量创建对象，应该把对象创建移到循环体外。</p>
+<p>2、自定义View的onDraw()方法会被频繁调用，不应该频繁的创建对象。</p>
+<p>3、使用对象池（比如MessagePool等）</p>
+<p><strong>监控和优化方案：</strong></p>
+<p>LeakCanaray //TODO 实现原理</p>
+<p>Android profiler</p>
+<p>实战如何看内存信息</p>
+<p>MAT</p>
+<h3 id="内存占用过大">内存占用过大</h3>
+<p>解决了内存泄露问题之后，开始着手对应用正常分配的内存进行优化，减小基数</p>
+<p><strong>常见原因</strong></p>
+<ul>
+<li>图片</li>
+</ul>
+<p>图片到底占了多大？</p>
+<p>跟放置的文件夹和目标density有关： widthPx * heightPx * 颜色深度。 与ImageView大小无关。</p>
+<p>优化：</p>
+<p>1、采样率</p>
+<p>2、图片格式RGB_565</p>
+<p>3、loading动画自己画 //TODO svg等</p>
+<p>4、缓存池，系统级别的缓存、软引用、弱引用</p>
+<p>5、及时回收，recycler</p>
+<p>Bitmap的优化、缓存池的实现。//TODO参考第三方库的实现</p>
+<ul>
+<li>数据结构优化</li>
+</ul>
+<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap等。</p>
+<p>枚举：使用注解代替</p>
+<p>ListView的convertView复用</p>
+<p>懒加载（不需要的对象延迟加载）</p>
+<p><strong>数据相关</strong>：序列化数据使用protobuf可以比xml省30%内存，慎用shareprefercnce，因为对于同一个sp，会将整个xml文件载入内存，有时候为了读一个配置，就会将几百k的数据读进内存，数据库字段尽量精简，只读取所需字段。</p>
+<h3 id="内存抖动">内存抖动</h3>
+<p>内存短时间内大量地分配和回收，频繁的GC可能会导致卡顿问题。甚至会导致OOM</p>
+<p>主要原因还是有因为大量小的对象频繁创建，导致内存碎片，从而当需要分配内存时，虽然总体上还是有剩余内存可分配，而由于这些内存不连续，导致无法分配，系统直接就返回OOM了</p>
+<h2 id="3-内存检测工具的使用">3. 内存检测工具的使用</h2>
+<h3 id="31-leakcanary">3.1 LeakCanary</h3>
+<p>内存泄露问题检测的利器，使用起来非常简单。</p>
+<p>build.gradle</p>
+<pre><code class="language-java">dependencies {
+  debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.3'
+  releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.3'
+  // Optional, if you use support library fragments:
+  debugImplementation 'com.squareup.leakcanary:leakcanary-support-fragment:1.6.3'
+}
+</code></pre>
+<p>Application中</p>
+<pre><code class="language-java">public class ExampleApplication extends Application {
+
+  @Override public void onCreate() {
+    super.onCreate();
+    if (LeakCanary.isInAnalyzerProcess(this)) {
+      // This process is dedicated to LeakCanary for heap analysis.
+      // You should not init your app in this process.
+      return;
+    }
+    LeakCanary.install(this);
+    // Normal app init code...
+  }
+}
+</code></pre>
+<p>当应用中有内存泄露问题时，会有如下界面，进行引用的分析：</p>
+<p><img src="https://i.loli.net/2019/03/08/5c822278b7645.png" alt=""></p>
+<p><strong>LeakCanary是怎么来检测内存泄露的呢？</strong></p>
+<p>十分简单，两步：</p>
+<p>1、监听Activity的onDestroy</p>
+<p><img src="https://i.loli.net/2019/03/08/5c8222f314c14.png" alt=""></p>
+<p>Application提供了callback可以监听应用中任何一个Activity的生命周期变化，这里在Activity destroy时对Activity进行watch。</p>
+<p>2、利用弱引用+引用队列检测对象是否被回收。</p>
+<blockquote>
+<p>这里说一下弱引用的特性：</p>
+<p>1、被弱引用引用的对象，在GC的时候一定会被回收。</p>
+<p>2、弱引用创建时可以传入一个引用队列，如果对象被回收，则这个弱引用会被放入引用队列中。</p>
+<p>由此，检测一个对象是否被回收就通过弱引用来引用，然后触发GC，最后检测引用队列中是否存在这个引用即可。</p>
+</blockquote>
+<p><img src="https://i.loli.net/2019/03/08/5c8223a9954e1.png" alt=""></p>
+<p>上面这种简单的使用只能检测出Activity对象的泄露，如果要检测其他对象的泄露，可以代码中主动watch想要检测的对象，这里不细说。</p>
+<h3 id="32-android-profiler工具">3.2 Android Profiler工具</h3>
+<p>AS中Run -&gt; Profile，可以查看CPU、内存、网络等信息。</p>
+<p><img src="https://i.loli.net/2019/03/08/5c8224d439e36.png" alt=""></p>
+<p>检查内存泄露的方式为：</p>
+<p>1、反复多几次进入、退出怀疑的界面</p>
+<p>2、最后退出怀疑的界面之后，手动触发一下GC</p>
+<p>3、dump现在内存信息（上图），进行分析。</p>
+<p>Android Profiler工具已经可以提供比较详细的信息，比如引用信息等，个人感觉已经可以替代老牌内存分析工具MAT了。这里不详细介绍工具的用法，大家可以实际去操作一遍就比较容易理解。</p>
+<h3 id="33-mat工具">3.3 MAT工具</h3>
+<p><img src="https://i.loli.net/2019/03/08/5c8225f67dd5d.png" alt=""></p>
+<p>Android Profiler工具可以将内存信息导出为hprof文件，然后必须利用platform-tools中提供的工具转换成MAT能够识别的hprof文件，然后打开进行分析：</p>
+<pre><code class="language-shell">hprof-conv leak.hprof leak-mat.hprof
+</code></pre>
+<p>MAT工具也提供了大量的信息供开发者进行分析，大家实际操作一下分析，更加容易理解。</p>
+<h2 id="总结">总结</h2>
+<p>1、对内存优化可以避免OOM，或者被系统杀死，提高系统稳定性。</p>
+<p>2、介绍了常见的内存问题的优化手段：内存泄露、内存溢出、内存抖动等。</p>
+<p>3、介绍了三个检测、分析内存的工具：LeakCanary、Android Profiler、MAT。只要动手实际操作几遍，就可以比较熟练地掌握这几个工具的使用</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://monkeylmj.github.io//tag/xing-neng-you-hua" class="tag">
+                    性能优化
+                  </a>
+                
+                  <a href="https://monkeylmj.github.io//tag/nei-cun-you-hua" class="tag">
+                    内存优化
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://monkeylmj.github.io//post/okhttp">
+                  <h3 class="post-title">
+                    okhttp源码解析
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'e9cdf34c05a98e6b38aa',
+        clientSecret: '5575ef73b184711f05560b414b117640a727edf7',
+        repo: 'monkeylmj.github.io',
+        owner: 'monkeylmj',
+        admin: ['monkeylmj'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

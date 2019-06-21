@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Android之Theme、Style、Attr | 猴子公园</title>
+<meta name="description" content="温故而知新">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561126091642">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://monkeylmj.github.io/">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561126091642" class="site-logo">
+        <h1 class="site-title">猴子公园</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="https://monkeylmj.github.io/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//post/about/" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Android之Theme、Style、Attr</h2>
+            <div class="post-date">2017-11-09</div>
+            
+            <div class="post-content">
+              <p>Android UI开发中经常会涉及到Theme、Style、Attr等概念，熟悉掌握这些概念能够帮助我们快速实现想要的UI效果，另外自定义View也经常需要使用到这些东西。</p>
+<!-- more -->
+<h2 id="概念">概念</h2>
+<h3 id="attr">Attr</h3>
+<p>基础单元，在Theme/Style/XML文件中作为Key使用，指定相应的value。</p>
+<p>定义方式：</p>
+<pre><code class="language-xml">&lt;attr name=&quot;borderWidth&quot; format=&quot;dimen&quot; /&gt;
+</code></pre>
+<p>使用方式:</p>
+<pre><code class="language-xml">&lt;View
+      android:layout_width=&quot;wrap_content&quot;
+      android:layout_height=&quot;wrap_content&quot;
+      app:borderWidth=&quot;10dp&quot; /&gt;
+</code></pre>
+<p>或</p>
+<pre><code class="language-java">int attr = R.attr.borderWidth;
+</code></pre>
+<p>可以将多个关联属性分组管理:</p>
+<pre><code class="language-java">&lt;declare-styleable name=&quot;MyButton&quot;&gt;
+    &lt;attr name=&quot;buttonWidth&quot; format=&quot;dimension&quot; /&gt;
+    &lt;attr name=&quot;buttonHeight&quot; format=&quot;dimension&quot; /&gt;
+    &lt;attr name=&quot;buttonColor&quot; format=&quot;color&quot; /&gt;
+&lt;/declare-styleable&gt;
+</code></pre>
+<p>通过以下方式可以访问到一个属性数组:</p>
+<pre><code class="language-java">int[] attrs = R.styleable.MyButton;
+</code></pre>
+<p>###Style</p>
+<p>样式集合，将多个属性放在一起，达到复用的目的。</p>
+<p>例如：</p>
+<pre><code class="language-xml">&lt;Button
+        android:id=&quot;@+id/button&quot;
+        android:layout_width=&quot;wrap_content&quot;
+        android:layout_height=&quot;wrap_content&quot;
+        android:gravity=&quot;center&quot;
+        android:textSize=&quot;20sp&quot;
+        android:textColor=&quot;#FF000&quot; /&gt;
+</code></pre>
+<p>抽离出一些公共的属性作为Style:</p>
+<pre><code class="language-xml">&lt;style name=&quot;myButtonStyle&quot;&gt;
+        &lt;item name=&quot;android:layout_width&quot;&gt;wrap_content&lt;/item&gt;
+        &lt;item name=&quot;android:layout_height&quot;&gt;wrap_content&lt;/item&gt;
+        &lt;item name=&quot;android:gravity&quot;&gt;center&lt;/item&gt;
+        &lt;item name=&quot;android:textColor&quot;&gt;#FF0000&lt;/item&gt;
+        &lt;item name=&quot;android:textSize&quot;&gt;20sp&lt;/item&gt;
+&lt;/style&gt;
+</code></pre>
+<p>引用Style:</p>
+<pre><code class="language-xml">&lt;Button
+        android:id=&quot;@+id/button&quot;
+        style=&quot;@style/myButtonStyle&quot; /&gt;
+</code></pre>
+<h3 id="theme">Theme</h3>
+<p>主题，相当于一个大的Style，作用在应用的层次。其中会包含一些Window相关的属性，比如:</p>
+<pre><code class="language-xml">&lt;item name=&quot;windowBackground&quot;&gt;?attr/colorBackground&lt;/item&gt;
+&lt;item name=&quot;windowClipToOutline&quot;&gt;true&lt;/item&gt;
+&lt;item name=&quot;windowFrame&quot;&gt;@null&lt;/item&gt;
+&lt;item name=&quot;windowNoTitle&quot;&gt;false&lt;/item&gt;
+&lt;item name=&quot;windowFullscreen&quot;&gt;false&lt;/item&gt;
+&lt;item name=&quot;windowOverscan&quot;&gt;false&lt;/item&gt;
+&lt;item name=&quot;windowIsFloating&quot;&gt;false&lt;/item&gt;
+</code></pre>
+<p>一些组件(Dialog，View等）的统一样式，比如：</p>
+<pre><code class="language-xml">&lt;item name=&quot;dialogTheme&quot;&gt;@style/ThemeOverlay.Material.Dialog&lt;/item&gt;
+&lt;item name=&quot;dialogTitleDecorLayout&quot;&gt;@layout/dialog_title_material&lt;/item&gt;
+&lt;item name=&quot;dialogPreferredPadding&quot;&gt;@dimen/dialog_padding_material&lt;/item&gt;
+&lt;item name=&quot;searchViewStyle&quot;&gt;@style/Widget.Material.SearchView&lt;/item&gt;
+&lt;item name=&quot;searchDialogTheme&quot;&gt;@style/Theme.Material.SearchBar&lt;/item&gt;
+&lt;item name=&quot;numberPickerStyle&quot;&gt;@style/Widget.Material.NumberPicker&lt;/item&gt;
+&lt;item name=&quot;calendarViewStyle&quot;&gt;@style/Widget.Material.CalendarView&lt;/item&gt;
+&lt;item name=&quot;timePickerStyle&quot;&gt;@style/Widget.Material.TimePicker&lt;/item&gt;
+&lt;item name=&quot;timePickerDialogTheme&quot;&gt;?attr/dialogTheme&lt;/item&gt;
+&lt;item name=&quot;datePickerStyle&quot;&gt;@style/Widget.Material.DatePicker&lt;/item&gt;
+&lt;item name=&quot;datePickerDialogTheme&quot;&gt;?attr/dialogTheme&lt;/item&gt;
+</code></pre>
+<p>主题相当于应用的一套皮肤，这套皮肤制定了各个组件的显示风格，使之具有统一性。我们熟知的有<code>Theme.Holo</code>,<code>Theme.Material</code>等等。</p>
+<h2 id="style-theme作用在view上的流程">Style、Theme作用在View上的流程</h2>
+<p>**问题：**既然使用Style、Theme都可以给View一个样式，那么他们是怎样作用在View上的呢？他们两个的优先级又是怎么样的。</p>
+<p>这里说一下优先级，日常的开发中应该都能够得出一个经验：<strong>layout布局文件中属性 &gt; style样式 &gt; Theme主题</strong></p>
+<p>拿一个Button举例，如果在布局文件中给Button设置了<code>android:background=&quot;XXX&quot;</code> 或者抽离到Style中再应用，那么Button就显示了我们指定的背景。 如果没有设置背景属性，Button仍然是有一个背景的。这个默认背景就是应用到了Theme中的样式，并且对于不同的主题有不同的样式~</p>
+<p>然后重点来说一下样式是怎样作用到View上的，对这个过程进行深入的理解。同样拿一个Android的View来举例：<code>TextView</code>，看看它是怎么应用样式的。</p>
+<p>[@TextView] 构造方法:</p>
+<pre><code class="language-java">public TextView(Context context) {
+        this(context, null);
+}
+
+public TextView(Context context, @Nullable AttributeSet attrs) {
+        this(context, attrs, com.android.internal.R.attr.textViewStyle);
+}
+
+public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        this(context, attrs, defStyleAttr, 0);
+}
+
+@SuppressWarnings(&quot;deprecation&quot;)
+public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+}
+</code></pre>
+<p>我们继承Android的View来自定义View时，通过会被要求继承四个的构造方法中的一个。对于XML中布局的View，被调用2个参数的构造方法来new一个实例，其中attrs就是布局的属性集，其中包含了这个View的所有样式。</p>
+<p>TextView所有的构造函数最终都指向最长参数的构造函数：</p>
+<pre><code class="language-java">public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+
+        final Resources.Theme theme = context.getTheme();
+        TypedArray a = theme.obtainStyledAttributes(attrs,
+                com.android.internal.R.styleable.TextViewAppearance, defStyleAttr, defStyleRes);
+        TypedArray appearance = null;
+        int ap = a.getResourceId(
+                com.android.internal.R.styleable.TextViewAppearance_textAppearance, -1);
+        a.recycle();
+        if (ap != -1) {
+            appearance = theme.obtainStyledAttributes(
+                    ap, com.android.internal.R.styleable.TextAppearance);
+        }
+        if (appearance != null) {
+            int n = appearance.getIndexCount();
+            for (int i = 0; i &lt; n; i++) {
+                int attr = appearance.getIndex(i);
+
+                switch (attr) {
+                case com.android.internal.R.styleable.TextAppearance_textColorHighlight:
+                    textColorHighlight = appearance.getColor(attr, textColorHighlight);
+                    break;
+
+                case com.android.internal.R.styleable.TextAppearance_textColor:
+                    textColor = appearance.getColorStateList(attr);
+                    break;
+                //省略大量Case
+            }
+
+            appearance.recycle();
+        }
+
+        a = theme.obtainStyledAttributes(attrs, com.android.internal.R.styleable.TextView, defStyleAttr, defStyleRes);
+
+        int n = a.getIndexCount();
+        for (int i = 0; i &lt; n; i++) {
+            int attr = a.getIndex(i);
+
+            switch (attr) {
+            case com.android.internal.R.styleable.TextView_editable:
+                editable = a.getBoolean(attr, editable);
+                break;
+
+            case com.android.internal.R.styleable.TextView_inputMethod:
+                inputMethod = a.getText(attr);
+                break;
+            //省略大量Case
+        }
+}
+</code></pre>
+<p>其中最核心的一个方法是<code>context.obtainStyledAttributes(AttributeSet, int[] attrs, defStyleAttr, defStyleRes)</code>。</p>
+<p><strong>AttributeSet</strong> : layout文件中解析出来的属性对象集合，包含我们的样式。</p>
+<p><strong>attrs</strong>: 前面讲到的一组相关联的属性集合。<code>com.android.internal.R.styleable.TextView</code> 可在AOSP中查看具体有哪些属性，这里列出一部分：</p>
+<pre><code class="language-xml"> &lt;declare-styleable name=&quot;TextView&quot;&gt;
+        &lt;!-- Determines the minimum type that getText() will return.
+             The default is &quot;normal&quot;.
+             Note that EditText and LogTextBox always return Editable,
+             even if you specify something less powerful here. --&gt;
+        &lt;attr name=&quot;bufferType&quot;&gt;
+            &lt;!-- Can return any CharSequence, possibly a
+             Spanned one if the source text was Spanned. --&gt;
+            &lt;enum name=&quot;normal&quot; value=&quot;0&quot; /&gt;
+            &lt;!-- Can only return Spannable. --&gt;
+            &lt;enum name=&quot;spannable&quot; value=&quot;1&quot; /&gt;
+            &lt;!-- Can only return Spannable and Editable. --&gt;
+            &lt;enum name=&quot;editable&quot; value=&quot;2&quot; /&gt;
+        &lt;/attr&gt;
+        &lt;!-- Text to display. --&gt;
+        &lt;attr name=&quot;text&quot; format=&quot;string&quot; localization=&quot;suggested&quot; /&gt;
+        &lt;!-- Hint text to display when the text is empty. --&gt;
+        &lt;attr name=&quot;hint&quot; format=&quot;string&quot; /&gt;
+        &lt;!-- Text color. --&gt;
+        &lt;attr name=&quot;textColor&quot; /&gt;
+        &lt;!-- Color of the text selection highlight. --&gt;
+        &lt;attr name=&quot;textColorHighlight&quot; /&gt;
+        &lt;!-- Color of the hint text. --&gt;
+        &lt;attr name=&quot;textColorHint&quot; /&gt;
+        &lt;!-- Base text color, typeface, size, and style. --&gt;
+        &lt;attr name=&quot;textAppearance&quot; /&gt;
+        &lt;!-- Size of the text. Recommended dimension type for text is &quot;sp&quot; for scaled-pixels (example: 15sp). --&gt;
+        &lt;attr name=&quot;textSize&quot; /&gt;
+        &lt;!-- Sets the horizontal scaling factor for the text. --&gt;
+        &lt;attr name=&quot;textScaleX&quot; format=&quot;float&quot; /&gt;
+   
+   &lt;!--省略不少--&gt;
+</code></pre>
+<p><strong>defStyleAttr</strong> ： 一个指定的属性资源。在这里为 <code>com.android.internal.R.attr.textViewStyle</code>（2个参数的构造方法传进来的）。可以在<strong>Theme</strong>中找到此属性对应的值，对应了一个Style.</p>
+<pre><code class="language-xml">&lt;item name=&quot;textViewStyle&quot;&gt;@style/Widget.Material.Light.TextView&lt;/item&gt;
+</code></pre>
+<p><strong>defStyleRes</strong>:  Style资源，也是一组样式。</p>
+<p>以上，<code>context.obtainStyledAttributes</code>  获取View样式的过程为：</p>
+<ol>
+<li>
+<p>从AttributeSet样式集合中寻找<code>int[] attrs</code>指定的几个属性对应的值。例如：xml中指定了<code>android:textColor=&quot;#ff0000&quot;</code>， attrs属性组中定义有<code>textColor</code>这个属性，则提取出来。</p>
+</li>
+<li>
+<p>如果AttributeSet中没有要提取的样式（比如，以上没有指定textColor样式），则根据<strong>defStyleAttr</strong>来从指定的<strong>Theme</strong>中寻找样式。比如：Material主题中指定了:</p>
+</li>
+</ol>
+<pre><code class="language-xml">&lt;item name=&quot;textViewStyle&quot;&gt;@style/Widget.Material.Light.TextView&lt;/item&gt;
+</code></pre>
+<p>则进一步去<code>@style/Widget.Material.Light.TextView</code> 中寻找想要的样式。</p>
+<ol start="3">
+<li>如果主题中仍然找不到要提取的样式。 则去<strong>defStyleRes</strong>(我们指定的Style样式中)寻找。</li>
+</ol>
+<h2 id="应用">应用</h2>
+<p>经过上面的分析，已经可以知道Theme是怎样应用默认样式到View上的了，因此我们就可以修改这种默认样式来定制我们自己的主题。比如我们想让默认的Button控件字体为30sp。</p>
+<pre><code class="language-xml">&lt;style name=&quot;CustomTheme&quot; parent=&quot;@android:style/Theme.Material&quot;&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/CustomButtonStyle&lt;/item&gt;
+&lt;/style&gt;
+    
+&lt;style name=&quot;CustomButtonStyle&quot; parent=&quot;@android:style/Widget.Button&quot;&gt;
+    &lt;item name=&quot;android:textSize&quot;&gt;30sp&lt;/item&gt;
+&lt;/style&gt;
+</code></pre>
+<p>首先，自定义<strong>CustomTheme</strong>继承Andorid的Theme，复写<strong>buttonStyle</strong>指向我们自定义的样式。</p>
+<p>其次，定义我们自己的Button样式，可以继承原来的样式，复写textSize属性，来修改默认的Button字体大小。</p>
+<h2 id="另外">另外</h2>
+<p>前面提到<strong>Theme</strong>中会有一些Window的样式，我们可以复写来实现一些window的效果.比如</p>
+<pre><code class="language-xml">&lt;style name=&quot;CustomTheme&quot; parent=&quot;@android:style/Theme.Material&quot;&gt;
+   &lt;item name=&quot;android:windowFullscreen&quot;&gt;true&lt;/item&gt; &lt;!--全屏--&gt;
+   &lt;item name=&quot;android:statusBarColor&quot;&gt;#FF0000&lt;/item&gt; &lt;!--修改状态栏的颜色--&gt;
+   &lt;item name=&quot;windowNoTitle&quot;&gt;false&lt;/item&gt; &lt;!--无标题--&gt;
+&lt;/style&gt;
+</code></pre>
+<p>这些属性在PhoneWindow的generateLayout方法中被解析和应用。</p>
+<h2 id="相关资料">相关资料</h2>
+<ul>
+<li>Android源码分析</li>
+<li><a href="http://www.jianshu.com/p/d147608dc27b">Android沉浸状态栏的实现</a></li>
+</ul>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://monkeylmj.github.io//tag/ui" class="tag">
+                    UI
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://monkeylmj.github.io//post/keyevent-dispatch">
+                  <h3 class="post-title">
+                    Android按键事件分发机制
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'e9cdf34c05a98e6b38aa',
+        clientSecret: '5575ef73b184711f05560b414b117640a727edf7',
+        repo: 'monkeylmj.github.io',
+        owner: 'monkeylmj',
+        admin: ['monkeylmj'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

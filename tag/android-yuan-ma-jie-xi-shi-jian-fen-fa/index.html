@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" >
 
-<title>关于 | 猴子公园</title>
+<title>Android源码解析 事件分发 | 猴子公园</title>
 <meta name="description" content="温故而知新">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -13,12 +13,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
-
-  
-    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
-  
-
-  
 
 
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
@@ -97,26 +91,29 @@
 
       <div class="main-container">
         <div class="content-container" data-aos="fade-up">
-          <div class="post-detail">
-            <h2 class="post-title">关于</h2>
-            <div class="post-date">2019-06-21</div>
-            
-            <div class="post-content">
-              <p>About me.</p>
+          <h2 class="current-tag">标签: Android源码解析 事件分发</h2>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/keyevent-dispatch">
+                  <h2 class="post-title">Android按键事件分发机制</h2>
+                </a>
+                <div class="post-date">
+                  2017-10-23
+                </div>
+                <div class="post-abstract">
+                  <p>本文总结一下Android中按键事件的分发机制。按键事件分发跟触摸事件分发类似，比触摸事件分发更加简单。</p>
 
-            </div>
-            
-            
-
-            
+                </div>
+              </div>
               
-                <div id="gitalk-container" data-aos="fade-in"></div>
-              
+            </article>
+          
 
-              
-            
-
-          </div>
+          <div class="pagination-container">
+  
+  
+</div>
 
         </div>
       </div>
@@ -138,29 +135,6 @@ var app = new Vue({
 })
 
 </script>
-
-
-
-  
-    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
-    <script>
-
-      var gitalk = new Gitalk({
-        clientID: 'e9cdf34c05a98e6b38aa',
-        clientSecret: '5575ef73b184711f05560b414b117640a727edf7',
-        repo: 'monkeylmj.github.io',
-        owner: 'monkeylmj',
-        admin: ['monkeylmj'],
-        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
-        distractionFreeMode: false  // Facebook-like distraction free mode
-      })
-
-      gitalk.render('gitalk-container')
-
-    </script>
-  
-
-  
 
 
 

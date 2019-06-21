@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" >
 
-<title>关于 | 猴子公园</title>
+<title>Android源码解析 | 猴子公园</title>
 <meta name="description" content="温故而知新">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -13,12 +13,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
-
-  
-    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
-  
-
-  
 
 
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
@@ -97,26 +91,45 @@
 
       <div class="main-container">
         <div class="content-container" data-aos="fade-up">
-          <div class="post-detail">
-            <h2 class="post-title">关于</h2>
-            <div class="post-date">2019-06-21</div>
-            
-            <div class="post-content">
-              <p>About me.</p>
+          <h2 class="current-tag">标签: Android源码解析</h2>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/android-boot">
+                  <h2 class="post-title">Andorid启动流程探索</h2>
+                </a>
+                <div class="post-date">
+                  2018-03-24
+                </div>
+                <div class="post-abstract">
+                  <p>最近在了解OTA升级方面的东西，学习的过程中，对Android的启动流程产生了很大的兴趣，很好奇为什么调用了<strong>RecoverySystem#installPackage</strong>方法之后手机重启就自动进入升级界面开始升级？Android整个系统的启动流程到底是怎样的。加上之前对bootloader、recovery等概念比较模糊,于是打算把这些东西梳理一下。</p>
 
-            </div>
-            
-            
-
-            
+                </div>
+              </div>
               
-                <div id="gitalk-container" data-aos="fade-in"></div>
-              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/handler">
+                  <h2 class="post-title">Android的消息机制-Handler</h2>
+                </a>
+                <div class="post-date">
+                  2016-08-08
+                </div>
+                <div class="post-abstract">
+                  <p>本文总结一下Android消息机制Handler的一些内部实现原理。Handler在我们Android开发中经常用来切换UI线程和Worker线程，详细了解其实现原理之后，更加灵活地使用。</p>
 
+                </div>
+              </div>
               
-            
+            </article>
+          
 
-          </div>
+          <div class="pagination-container">
+  
+  
+</div>
 
         </div>
       </div>
@@ -138,29 +151,6 @@ var app = new Vue({
 })
 
 </script>
-
-
-
-  
-    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
-    <script>
-
-      var gitalk = new Gitalk({
-        clientID: 'e9cdf34c05a98e6b38aa',
-        clientSecret: '5575ef73b184711f05560b414b117640a727edf7',
-        repo: 'monkeylmj.github.io',
-        owner: 'monkeylmj',
-        admin: ['monkeylmj'],
-        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
-        distractionFreeMode: false  // Facebook-like distraction free mode
-      })
-
-      gitalk.render('gitalk-container')
-
-    </script>
-  
-
-  
 
 
 

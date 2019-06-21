@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>okhttp源码解析 | 猴子公园</title>
+<meta name="description" content="温故而知新">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561126091642">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://monkeylmj.github.io/">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561126091642" class="site-logo">
+        <h1 class="site-title">猴子公园</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="https://monkeylmj.github.io/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//post/about/" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">okhttp源码解析</h2>
+            <div class="post-date">2019-03-03</div>
+            
+            <div class="post-content">
+              <p>简要总结一下OKHttp框架的整体流程，结合其中用到的设计模式进行说明。</p>
+<!-- more -->
+<h2 id="1-使用方式">1. 使用方式</h2>
+<pre><code class="language-java">//1.创建Client
+OkHttpClient client = new OkHttpClient();
+
+//2.创建请求
+Request request = new Request.Builder()
+                .url(&quot;xxx&quot;)
+                .build();
+//3.执行(同步or异步)
+okHttpClient.newCall(request).execute();
+okHttpClient.newCall(request).enqueue(responseCallback);
+</code></pre>
+<h2 id="2-源码设计模式解析">2. 源码设计模式解析</h2>
+<h3 id="21-okhttpclient和request对象的实例化">2.1 OKHttpClient和Request对象的实例化</h3>
+<p>OKHttpClient和Request对象包含大量的属性，通过<strong>Builder模式</strong>按需配置，方便地创建对象。</p>
+<p>@Request.Builder</p>
+<pre><code class="language-java">public static class Builder {
+    HttpUrl url;
+    String method;
+    Headers.Builder headers;
+    RequestBody body;
+    Object tag;
+
+    public Builder() {
+      this.method = &quot;GET&quot;;
+      this.headers = new Headers.Builder();
+    }
+
+    Builder(Request request) {
+      this.url = request.url;
+      this.method = request.method;
+      this.body = request.body;
+      this.tag = request.tag;
+      this.headers = request.headers.newBuilder();
+    }
+
+    public Builder url(HttpUrl url) {
+      if (url == null) throw new NullPointerException(&quot;url == null&quot;);
+      this.url = url;
+      return this;
+    }
+    
+    //省略...
+}
+</code></pre>
+<p>@OKHttpClient 中包含大量的请求过程的重要属性，可通过Builder来配置</p>
+<pre><code class="language-java">class OKHttpClient {
+  final Dispatcher dispatcher;
+  final @Nullable Proxy proxy;
+  final List&lt;Protocol&gt; protocols;
+  final List&lt;ConnectionSpec&gt; connectionSpecs;
+  final List&lt;Interceptor&gt; interceptors;
+  final List&lt;Interceptor&gt; networkInterceptors;
+  final EventListener.Factory eventListenerFactory;
+  final ProxySelector proxySelector;
+  final CookieJar cookieJar;
+  final @Nullable Cache cache;
+  final @Nullable InternalCache internalCache;
+  final SocketFactory socketFactory;
+  final @Nullable SSLSocketFactory sslSocketFactory;
+  final @Nullable CertificateChainCleaner certificateChainCleaner;
+  final HostnameVerifier hostnameVerifier;
+  final CertificatePinner certificatePinner;
+  final Authenticator proxyAuthenticator;
+  final Authenticator authenticator;
+  final ConnectionPool connectionPool;
+  final Dns dns;
+  final boolean followSslRedirects;
+  final boolean followRedirects;
+  final boolean retryOnConnectionFailure;
+  final int connectTimeout;
+  final int readTimeout;
+  final int writeTimeout;
+  final int pingInterval;
+}
+</code></pre>
+<h3 id="22-okhttpclientnewcall创建call对象">2.2 okHttpClient.newCall创建Call对象</h3>
+<pre><code class="language-java">@Override
+public Call newCall(Request request) {
+   return RealCall.newRealCall(this, request, false /* for web socket */);
+}
+</code></pre>
+<p>这里看到OKHttpClient类实现了Call.Factory接口，方法中创建了Call的实现类RealCall。</p>
+<p>@Call.Factory</p>
+<pre><code class="language-java">  interface Factory {
+    Call newCall(Request request);
+  }
+</code></pre>
+<p>这里用到了<strong>工厂方法模式</strong>，Factory接口提供newCall方法，不同的工厂实现类可以继承来生产Call类型的对象。目前只有OKHttpClient一个工厂实现类，满足开闭原则，以后可以直接添加其他工厂来生成不同的Call，方便扩展。</p>
+<h3 id="23-call执行">2.3 Call执行</h3>
+<p>上一步生成的RealCall开始执行，这里选择同步执行的方式来举例往下查看流程，异步流程类似（只是交给dispatcher放到线程池里执行）</p>
+<p>@RealCall#execute</p>
+<pre><code class="language-java">@Override public Response execute() throws IOException {
+    synchronized (this) {
+      if (executed) throw new IllegalStateException(&quot;Already Executed&quot;);
+      executed = true;
+    }
+    captureCallStackTrace();
+    eventListener.callStart(this);
+    try {
+      client.dispatcher().executed(this);
+      Response result = getResponseWithInterceptorChain();
+      if (result == null) throw new IOException(&quot;Canceled&quot;);
+      return result;
+    } catch (IOException e) {
+      eventListener.callFailed(this, e);
+      throw e;
+    } finally {
+      client.dispatcher().finished(this);
+    }
+  }
+</code></pre>
+<p>逻辑非常简单，核心就一句话： <code>Response result = getResponseWithInterceptorChain()</code>，顾名思义这里就是通过一层层拦截器最终获取到Response，整个流程结束。</p>
+<h3 id="24-拦截器的实现">2.4 拦截器的实现</h3>
+<p>OKHttp网络请求流程的核心部分，使用了<strong>责任链模式</strong>来完成请求发送者和请求处理者的解耦（只需将请求发到链上即可，无须关系处理的细节）。</p>
+<p>@RealCall#getResponseWithInterceptorChain</p>
+<pre><code class="language-java">Response getResponseWithInterceptorChain() throws IOException {
+    // Build a full stack of interceptors.
+    List&lt;Interceptor&gt; interceptors = new ArrayList&lt;&gt;();
+    interceptors.addAll(client.interceptors());
+    interceptors.add(retryAndFollowUpInterceptor);
+    interceptors.add(new BridgeInterceptor(client.cookieJar()));
+    interceptors.add(new CacheInterceptor(client.internalCache()));
+    interceptors.add(new ConnectInterceptor(client));
+    if (!forWebSocket) {
+      interceptors.addAll(client.networkInterceptors());
+    }
+    interceptors.add(new CallServerInterceptor(forWebSocket));
+
+    Interceptor.Chain chain = new RealInterceptorChain(interceptors, null, null, null, 0,
+        originalRequest, this, eventListener, client.connectTimeoutMillis(),
+        client.readTimeoutMillis(), client.writeTimeoutMillis());
+
+    return chain.proceed(originalRequest);
+  }
+</code></pre>
+<p>首先，构造了一个interceptors列表，其中加入了一些默认的拦截器，client.interceptors和client.networkInterceptors为自定义的拦截器（构造OKHttpClient时加入），所有拦截器都实现了Interceptor接口。</p>
+<p>然后，构造了一个职责链 RealInterceptorChain持有了所有的拦截器，然后将请求发到职责链上。</p>
+<p>@RealInterceptorChain#proceed</p>
+<pre><code class="language-java">public Response proceed(Request request, StreamAllocation streamAllocation, HttpCodec httpCodec,RealConnection connection) throws IOException {
+     //...
+     // Call the next interceptor in the chain.
+    RealInterceptorChain next = new RealInterceptorChain(interceptors, streamAllocation, httpCodec,
+        connection, index + 1, request, call, eventListener, connectTimeout, readTimeout,
+        writeTimeout);
+    Interceptor interceptor = interceptors.get(index);
+    Response response = interceptor.intercept(next);
+    //...
+    return response;
+  }
+</code></pre>
+<p>处理的逻辑很简单：取出index所在的拦截器，执行intercept方法进行拦截，传入的参数为新构造的职责链（index+1，指向了下一个拦截器）。</p>
+<p>UML图如下：</p>
+<p><img src="https://i.loli.net/2019/02/23/5c70cba2935de.png" alt=""></p>
+<p>最后，写一个简单的自定义拦截器，看下大概的流程：</p>
+<pre><code class="language-java">public class TestInterceptor implements Interceptor {
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request request = chain.request(); //取出request
+        
+        //请求前拦截进行一些处理...
+        
+        Response response = chain.proceed(request); //传给下一个拦截器
+        
+        //响应后拦截进行一些处理...
+        
+        return response;
+    }
+}
+</code></pre>
+<p>到此，OKHttp的网络请求流程已经完整！</p>
+<h2 id="总结">总结</h2>
+<p><img src="https://i.loli.net/2019/02/23/5c70be03dc3e8.png" alt=""></p>
+<p>OKHttp网络请求框架的实现很优雅，各个类的职责明确，整个流程跟把大象装在冰箱里一样简单：</p>
+<p>1、组装Request</p>
+<p>2、Client发送Request（经过各个拦截器的处理）</p>
+<p>3、返回Response</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://monkeylmj.github.io//tag/yuan-ma-jie-xi" class="tag">
+                    源码解析
+                  </a>
+                
+                  <a href="https://monkeylmj.github.io//tag/wang-luo" class="tag">
+                    网络
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://monkeylmj.github.io//post/android-performance-ui">
+                  <h3 class="post-title">
+                    Android性能优化 - UI优化
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'e9cdf34c05a98e6b38aa',
+        clientSecret: '5575ef73b184711f05560b414b117640a727edf7',
+        repo: 'monkeylmj.github.io',
+        owner: 'monkeylmj',
+        admin: ['monkeylmj'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

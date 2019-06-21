@@ -1,122 +1,286 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8" />
-<meta name="description" content="" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Gridea</title>
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561123284973">
+    <meta charset="utf-8" >
+
+<title>猴子公园</title>
+<meta name="description" content="温故而知新">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561126091642">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
-<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 
 
 
   </head>
   <body>
-    <div class="main">
-      <div class="main-content">
-        <div class="site-header">
-  <a href="https://monkeylmj.github.io/">
-  <img class="avatar" src="https://monkeylmj.github.io//images/avatar.png?v=1561123284973" alt="">
-  </a>
-  <h1 class="site-title">
-    Gridea
-  </h1>
-  <p class="site-description">
-    温故而知新
-  </p>
-  <div class="menu-container">
-    
-      
-        <a href="/" class="menu">
-          首页
-        </a>
-      
-    
-      
-        <a href="/archives" class="menu">
-          归档
-        </a>
-      
-    
-      
-        <a href="/tags" class="menu">
-          标签
-        </a>
-      
-    
-      
-        <a href="/post/about" class="menu">
-          关于
-        </a>
-      
-    
-  </div>
-  <div class="social-container">
-    
-      
-    
-      
-    
-      
-    
-      
-    
-      
-    
-  </div>
-</div>
+    <div id="app" class="main">
 
-    
-        <div class="post-container">
-  
-    <article class="post">
-      <a href="https://monkeylmj.github.io//post/hello-gridea">
-        <h2 class="post-title">Hello Gridea</h2>
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://monkeylmj.github.io/">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561126091642" class="site-logo">
+        <h1 class="site-title">猴子公园</h1>
       </a>
-      <div class="post-info">
-        <time class="post-time">
-          · 2018-12-12 ·
-        </time>
-        
-          <a href="https://monkeylmj.github.io//tag/gridea" class="post-tag">
-            # Gridea
-          </a>
-        
-      </div>
-      
-        <a href="https://monkeylmj.github.io//post/hello-gridea" class="post-feature-image" style="background-image: url('https://monkeylmj.github.io//post-images/hello-gridea.png')">
-        </a>
-      
-      <div class="post-abstract">
-        <p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-
-      </di>
-    </article>
-  
-</div>
-
-    
-        <div class="pagination-container">
-  
-  
-</div>
-
-    
-        <div class="site-footer">
-  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | 
-  <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
-</div>
-
-<script>
-  hljs.initHighlightingOnLoad()
-</script>
-
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
       </div>
     </div>
+    <div>
+      
+        
+          <a href="https://monkeylmj.github.io/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//post/about/" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/android-performance-memory">
+                  <h2 class="post-title">Android性能优化 - 内存优化</h2>
+                </a>
+                <div class="post-date">
+                  2019-03-08
+                </div>
+                <div class="post-abstract">
+                  <p>在内存方面我们通常会遇到几个问题：内存空间占用过大、内存泄露、内存溢出、内存抖动等。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/okhttp">
+                  <h2 class="post-title">okhttp源码解析</h2>
+                </a>
+                <div class="post-date">
+                  2019-03-03
+                </div>
+                <div class="post-abstract">
+                  <p>简要总结一下OKHttp框架的整体流程，结合其中用到的设计模式进行说明。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/android-performance-ui">
+                  <h2 class="post-title">Android性能优化 - UI优化</h2>
+                </a>
+                <div class="post-date">
+                  2019-03-02
+                </div>
+                <div class="post-abstract">
+                  <p>系统地总结一下Android性能优化关于UI优化方面的知识点。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/path-tracing">
+                  <h2 class="post-title">路径动画的实现方案</h2>
+                </a>
+                <div class="post-date">
+                  2018-04-08
+                </div>
+                <div class="post-abstract">
+                  <p>总结一下工作中遇到的一个“UI路径动画”的实现。效果如下图（对号的动画）</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/android-boot">
+                  <h2 class="post-title">Andorid启动流程探索</h2>
+                </a>
+                <div class="post-date">
+                  2018-03-24
+                </div>
+                <div class="post-abstract">
+                  <p>最近在了解OTA升级方面的东西，学习的过程中，对Android的启动流程产生了很大的兴趣，很好奇为什么调用了<strong>RecoverySystem#installPackage</strong>方法之后手机重启就自动进入升级界面开始升级？Android整个系统的启动流程到底是怎样的。加上之前对bootloader、recovery等概念比较模糊,于是打算把这些东西梳理一下。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/android-theme-style-attr">
+                  <h2 class="post-title">Android之Theme、Style、Attr</h2>
+                </a>
+                <div class="post-date">
+                  2017-11-09
+                </div>
+                <div class="post-abstract">
+                  <p>Android UI开发中经常会涉及到Theme、Style、Attr等概念，熟悉掌握这些概念能够帮助我们快速实现想要的UI效果，另外自定义View也经常需要使用到这些东西。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/keyevent-dispatch">
+                  <h2 class="post-title">Android按键事件分发机制</h2>
+                </a>
+                <div class="post-date">
+                  2017-10-23
+                </div>
+                <div class="post-abstract">
+                  <p>本文总结一下Android中按键事件的分发机制。按键事件分发跟触摸事件分发类似，比触摸事件分发更加简单。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/androidnfc">
+                  <h2 class="post-title">Android NFC开发入门</h2>
+                </a>
+                <div class="post-date">
+                  2017-02-28
+                </div>
+                <div class="post-abstract">
+                  <p>总结一下Android中NFC开发相关的知识点。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/handler">
+                  <h2 class="post-title">Android的消息机制-Handler</h2>
+                </a>
+                <div class="post-date">
+                  2016-08-08
+                </div>
+                <div class="post-abstract">
+                  <p>本文总结一下Android消息机制Handler的一些内部实现原理。Handler在我们Android开发中经常用来切换UI线程和Worker线程，详细了解其实现原理之后，更加灵活地使用。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://monkeylmj.github.io//post/tread-pool">
+                  <h2 class="post-title">线程池的使用总结</h2>
+                </a>
+                <div class="post-date">
+                  2016-03-07
+                </div>
+                <div class="post-abstract">
+                  <p>本篇是对Java线程池使用的总结，系统记录下线程池的用法。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+
+          <div class="pagination-container">
+  
+  
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
   </body>
 </html>

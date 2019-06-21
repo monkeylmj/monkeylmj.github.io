@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>线程池的使用总结 | 猴子公园</title>
+<meta name="description" content="温故而知新">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561126091642">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://monkeylmj.github.io/">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561126091642" class="site-logo">
+        <h1 class="site-title">猴子公园</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="https://monkeylmj.github.io/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//post/about/" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">线程池的使用总结</h2>
+            <div class="post-date">2016-03-07</div>
+            
+            <div class="post-content">
+              <p>本篇是对Java线程池使用的总结，系统记录下线程池的用法。</p>
+<!-- more -->
+<h2 id="为什么使用线程池">为什么使用线程池？</h2>
+<ol>
+<li>
+<p>相比于每次都创建新的Thread，通过重用线程池中的线程，减少了创建线程和销毁线程带来的性能开销。</p>
+</li>
+<li>
+<p>对线程进行管理控制，控制线程并发数量、定时执行、间隔执行等。</p>
+</li>
+</ol>
+<h2 id="java线程池模型的uml类图">Java线程池模型的UML类图</h2>
+<p><img src="https://i.loli.net/2018/08/04/5b65c33dcf4aa.png" alt=""></p>
+<p>其中 <strong>ThreadPoolExecutor</strong> 是线程池的真正实现，从构造方法中可以看出其创建的细节和需要配置的参数</p>
+<pre><code class="language-java">
+public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue&lt;Runnable&gt; workQueue,
+                          ThreadFactory threadFactory,
+                          RejectedExecutionHandler handler) {...}
+
+</code></pre>
+<p>下面对每个参数进行解释：</p>
+<ul>
+<li>
+<p><strong>corePoolSize</strong>: 线程池的核心线程数，默认情况下创建的核心线程不会被销毁，除非设置ThreadPoolExecutor#allowCoreThreadTimeOut为true,则根据keepAliveTime指定的超时时长进行销毁。</p>
+</li>
+<li>
+<p><strong>maximumPoolSize</strong>: 线程池容纳的最大线程数（<em>除了核心线程，剩下的为非核心线程</em>），线程池中运行的线程不能超过此数量。</p>
+</li>
+<li>
+<p><strong>keepAliveTime</strong>: 非核心线程闲置时的超时时长，超过此时间，非核心线程会被销毁，如果设置ThreadPoolExecutor#allowCoreThreadTimeOut为true，这核心线程也享有此特性。</p>
+</li>
+<li>
+<p><strong>unit</strong>: 超时时长的时间单位。</p>
+</li>
+<li>
+<p><strong>workQueue</strong>: 缓存的任务队列，当添加的任务数量大于corePoolSize时，任务将会被添加到此队列中进行缓存。</p>
+</li>
+<li>
+<p><strong>threadFactory</strong>:线程池用来创建线程的工厂类，只有一个<strong>newThread(Runnable r)</strong> 的接口方法。</p>
+</li>
+<li>
+<p><strong>RejectedExecutionHandler</strong>: 拒绝策略。当线程池中的线程达到最大线程数并且缓存任务队列已满，会调用此对象来进行处理。</p>
+<p>RejectedExecutionHandler是一个接口，</p>
+<pre><code class="language-java">public interface RejectedExecutionHandler {
+    void rejectedExecution(Runnable r, ThreadPoolExecutor executor);
+}
+</code></pre>
+<p>有四个实现类，对应4种处理策略，从源码中可以看出他们的作用：</p>
+<p><strong>AbortPolicy</strong> 丢弃当前添加的任务并且抛出RejectedExecutionException异常</p>
+<p><strong>DiscardPolicy</strong> 丢弃当前添加的任务，但是不抛出异常</p>
+<p><strong>DiscardOldestPolicy</strong> 丢弃最老的任务，也就是任务队列队首的任务，然后再尝试执行当前添加的任务</p>
+<p><strong>CallerRunsPolicy</strong> 由调用线程处理该任务</p>
+</li>
+</ul>
+<h2 id="线程池的执行策略">线程池的执行策略</h2>
+<ol>
+<li>
+<p>如果线程池中的线程数量&lt;核心线程数量，直接创建一个核心线程执行该任务。</p>
+</li>
+<li>
+<p>如果线程池中的线程数量&gt;=核心线程数量，则将任务插入到缓存任务队列中，如上 <strong>workQueue</strong> 参数指定的队列中。</p>
+</li>
+<li>
+<p>如果缓存任务队列已满不能继续添加任务，并且线程池中的线程数量&lt;最大线程数，则创建一个非核心线程来执行该任务。</p>
+</li>
+<li>
+<p>如果缓存任务队列和线程池均已满，则调用 <strong>RejectedExecutionHandler#rejectedExecution</strong> 进行处理。</p>
+</li>
+</ol>
+<p><strong>另外：</strong></p>
+<ul>
+<li>
+<p>如果线程池中的线程执行任务完毕从而闲置，则从缓存任务队列头取出一个任务，继续进行执行。（<strong>优点一，重用已经创建的线程</strong>）</p>
+</li>
+<li>
+<p>如果线程池中线程闲置，并且缓存队列中已经没有任务，则线程池会根据超时规则进行线程的销毁。一般情况下，核心线程不进行销毁，非核心线程根据设置的超时间长进行销毁。</p>
+</li>
+<li>
+<p>处理任务的优先级： 核心线程池 &gt; 缓存任务队列 &gt; 非核心线程池</p>
+</li>
+</ul>
+<h2 id="常用的4种线程池模型">常用的4种线程池模型</h2>
+<p><strong>Executors</strong> 提供了几个静态工厂方法来创建几种不同特性的线程池，本质上就是通过配置ThreadPoolExecutor构造方法的参数组合，实现具有不同特性的ThreadPool。</p>
+<h4 id="1-fixedthreadpool">1、FixedThreadPool</h4>
+<p>固定线程数量的线程池</p>
+<pre><code class="language-java">
+public static ExecutorService newFixedThreadPool(int nThreads) {
+    return new ThreadPoolExecutor(nThreads, nThreads,
+                                  0L, TimeUnit.MILLISECONDS,
+                                  new LinkedBlockingQueue&lt;Runnable&gt;());
+}
+
+</code></pre>
+<p>从ThreadPoolExecutor的构造方法参数中可以看出，FixedThreadPool 中只有核心线程。当核心线程用完后，新添加的任务进入任务队列<strong>new LinkedBlockingQueue<Runnable>()</strong> 中：</p>
+<pre><code class="language-java">public LinkedBlockingQueue() {
+    this(Integer.MAX_VALUE);
+}
+</code></pre>
+<p>默认的构造方法创建了一个无限大的队列，所以我们可以添加任意数目的任务，但是最大并发数只是<em>nThreads</em>。</p>
+<p>前面说过，默认情况下，核心线程是不会销毁的，即使它们执行完任务变为空闲状态，这样带来的好处是可以快速响应之后添加的新任务（免去了创建线程的性能开销）。</p>
+<p>但是可能带来一些意想不到的问题，比如<strong>内存泄露</strong>。之前在进行Andorid项目的性能优化时就遇到过线程池带来的内存泄露，正是由于线程池中的核心线程持有了外部的对象（View、Activity等）,并且自身不会主动销毁，导致Activity等持有的其他大对象迟迟不能被GC回收，内存泄露。</p>
+<p>当然，有解决方案：</p>
+<p><strong>ThreadPoolExecutor#shutdown()</strong> 关闭线程池。</p>
+<p>调用此方法后，ExecutorService不会立即关闭，但是不再接受新的任务，直到所有线程都执行完毕才会关闭，所有在shutdown执行前提交的任务都会得到执行。</p>
+<p><strong>ThreadPoolExecutor#shutdownNow()</strong> 立即关闭线程池。</p>
+<p>调用此方法，会尝试关闭所有正在执行的任务（但是不能做任何的保证，它们可能都停止，也可能都完成），跳过正在等待的任务。</p>
+<p>最后，使用弱引用的方式持有外部对象也是一个保险的做法。</p>
+<h4 id="2-cachedthreadpool">2、CachedThreadPool</h4>
+<p>线程数量不定的线程池</p>
+<pre><code class="language-java">public static ExecutorService newCachedThreadPool() {
+   return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                 60L, TimeUnit.SECONDS,
+                                 new SynchronousQueue&lt;Runnable&gt;());
+}
+</code></pre>
+<p>同样，从构造方法参数中可以看出，CachedThreadPool没有核心线程池，最大线程数量为无限大，也就是可以并发执行任意数目的线程（超时销毁时长为60s)。</p>
+<p>其中 <strong>new SynchronousQueue<Runnable>()</strong> 是一个特殊的任务队列，可以理解为一个管道，只能通过任务，不能存储任何任务，这就导致所有插入的任务都会立即得到执行。</p>
+<p>从此线程池的特性看来，这类线程池比较适合执行大量的耗时较少的任务。一方面，线程的并发数量是无限的。另一方面，60s的超时时长保证闲置的线程销毁，最终整个线程池不包含任何线程，不占用系统宝贵资源。</p>
+<h4 id="3-singlethreadexecutor">3、SingleThreadExecutor</h4>
+<p>只有一个核心线程的线程池</p>
+<pre><code class="language-java">public static ExecutorService newSingleThreadExecutor() {
+    return new FinalizableDelegatedExecutorService
+        (new ThreadPoolExecutor(1, 1,
+                                0L, TimeUnit.MILLISECONDS,
+                                new LinkedBlockingQueue&lt;Runnable&gt;()));
+}
+</code></pre>
+<p>跟FixedThreadPool类似，只是<strong>nThreads</strong>固定为1，算是它的一个特例。确保了所有任务都在同一个线程按顺序同步执行，这里不再多述。</p>
+<h4 id="4-scheduledthreadpool">4、ScheduledThreadPool</h4>
+<p>进行定时以及周期性任务执行的线程池</p>
+<pre><code class="language-java">public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
+    return new ScheduledThreadPoolExecutor(corePoolSize);
+}
+</code></pre>
+<pre><code class="language-java">public ScheduledThreadPoolExecutor(int corePoolSize) {
+    super(corePoolSize, Integer.MAX_VALUE,
+          DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
+          new DelayedWorkQueue());
+}
+</code></pre>
+<p>从UML类图中，可以看出此类线程池的特殊之处-实现了<strong>ScheduledExecutorService</strong>接口，此接口中主要定义如下几个接口方法：</p>
+<pre><code class="language-java">/**
+ * 延时delay后执行command
+ */
+public ScheduledFuture&lt;?&gt; schedule(Runnable command, long delay, TimeUnit unit);
+
+public &lt;V&gt; ScheduledFuture&lt;V&gt; schedule(Callable&lt;V&gt; callable, long delay, TimeUnit unit);
+
+/**
+ * 初始延时initialDelay后，每隔period执行一次command
+ */
+public ScheduledFuture&lt;?&gt; scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit);
+
+public ScheduledFuture&lt;?&gt; scheduleWithFixedDelay(Runnable command, long initialDelay,long delay,TimeUnit unit);
+</code></pre>
+<p>使用此类线程池可以定时执行任务和固定周期重复执行任务。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://monkeylmj.github.io//tag/duo-xian-cheng" class="tag">
+                    多线程
+                  </a>
+                
+              </div>
+            
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'e9cdf34c05a98e6b38aa',
+        clientSecret: '5575ef73b184711f05560b414b117640a727edf7',
+        repo: 'monkeylmj.github.io',
+        owner: 'monkeylmj',
+        admin: ['monkeylmj'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>
