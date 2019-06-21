@@ -759,3 +759,7 @@ a {
         margin-left: 220px;
       }
     
+      .post-detail {
+max-width:2000px;
+}
+    
