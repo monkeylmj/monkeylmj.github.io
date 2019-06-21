@@ -4,12 +4,12 @@
     <meta charset="utf-8" >
 
 <title>Android性能优化 - 内存优化 | 猴子公园</title>
-<meta name="description" content="思考">
+<meta name="description" content="坚持比完美更重要">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561126568647">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1561128577746">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
@@ -36,7 +36,7 @@
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://monkeylmj.github.io/">
-        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561126568647" class="site-logo">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1561128577746" class="site-logo">
         <h1 class="site-title">猴子公园</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -86,7 +86,7 @@
       
     </div>
     <div class="site-description">
-      思考
+      坚持比完美更重要
     </div>
     <div class="site-footer">
       Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
@@ -100,6 +100,9 @@
           <div class="post-detail">
             <h2 class="post-title">Android性能优化 - 内存优化</h2>
             <div class="post-date">2019-03-08</div>
+            
+              <div class="feature-container" style="background-image: url('https://i.loli.net/2019/03/08/5c822278b7645.png')">
+              </div>
             
             <div class="post-content">
               <p>在内存方面我们通常会遇到几个问题：内存空间占用过大、内存泄露、内存溢出、内存抖动等。</p>
@@ -120,7 +123,7 @@
 <p>第一个属性为一个标准应用能申请的最大内存。</p>
 <p>第二个属性为应用添加<strong>largeHeap=true</strong>之后能够申请的最大内存。</p>
 <h3 id="12-lowmemorykiller机制">1.2 LowMemoryKiller机制</h3>
-<p>####进程优先级</p>
+<h4 id="进程优先级">进程优先级</h4>
 <p>当系统空间不足时，会按照进程的优先级对进程进行回收来腾出更多的空间给有需要的进程使用。</p>
 <p>Android中进程按优先级大概分为几个类型，优先级从高到底依次为：</p>
 <p><img src="https://i.loli.net/2019/03/08/5c821da6d4587.png" alt=""></p>
@@ -239,37 +242,6 @@ WebView用完之后destory</p>
 <p>1、尽量避免在循环体内大量创建对象，应该把对象创建移到循环体外。</p>
 <p>2、自定义View的onDraw()方法会被频繁调用，不应该频繁的创建对象。</p>
 <p>3、使用对象池（比如MessagePool等）</p>
-<p><strong>监控和优化方案：</strong></p>
-<p>LeakCanaray //TODO 实现原理</p>
-<p>Android profiler</p>
-<p>实战如何看内存信息</p>
-<p>MAT</p>
-<h3 id="内存占用过大">内存占用过大</h3>
-<p>解决了内存泄露问题之后，开始着手对应用正常分配的内存进行优化，减小基数</p>
-<p><strong>常见原因</strong></p>
-<ul>
-<li>图片</li>
-</ul>
-<p>图片到底占了多大？</p>
-<p>跟放置的文件夹和目标density有关： widthPx * heightPx * 颜色深度。 与ImageView大小无关。</p>
-<p>优化：</p>
-<p>1、采样率</p>
-<p>2、图片格式RGB_565</p>
-<p>3、loading动画自己画 //TODO svg等</p>
-<p>4、缓存池，系统级别的缓存、软引用、弱引用</p>
-<p>5、及时回收，recycler</p>
-<p>Bitmap的优化、缓存池的实现。//TODO参考第三方库的实现</p>
-<ul>
-<li>数据结构优化</li>
-</ul>
-<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap等。</p>
-<p>枚举：使用注解代替</p>
-<p>ListView的convertView复用</p>
-<p>懒加载（不需要的对象延迟加载）</p>
-<p><strong>数据相关</strong>：序列化数据使用protobuf可以比xml省30%内存，慎用shareprefercnce，因为对于同一个sp，会将整个xml文件载入内存，有时候为了读一个配置，就会将几百k的数据读进内存，数据库字段尽量精简，只读取所需字段。</p>
-<h3 id="内存抖动">内存抖动</h3>
-<p>内存短时间内大量地分配和回收，频繁的GC可能会导致卡顿问题。甚至会导致OOM</p>
-<p>主要原因还是有因为大量小的对象频繁创建，导致内存碎片，从而当需要分配内存时，虽然总体上还是有剩余内存可分配，而由于这些内存不连续，导致无法分配，系统直接就返回OOM了</p>
 <h2 id="3-内存检测工具的使用">3. 内存检测工具的使用</h2>
 <h3 id="31-leakcanary">3.1 LeakCanary</h3>
 <p>内存泄露问题检测的利器，使用起来非常简单。</p>
@@ -350,7 +322,7 @@ WebView用完之后destory</p>
                 <div class="next">下一篇</div>
                 <a href="https://monkeylmj.github.io//post/okhttp">
                   <h3 class="post-title">
-                    okhttp源码解析
+                    OkHttp源码解析
                   </h3>
                 </a>
               </div>
