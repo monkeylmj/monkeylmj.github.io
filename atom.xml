@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://monkeylmj.github.io/</id>
     <title>猴子公园</title>
-    <updated>2019-06-21T14:56:13.377Z</updated>
+    <updated>2019-07-09T14:34:12.121Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://monkeylmj.github.io/"/>
     <link rel="self" href="https://monkeylmj.github.io//atom.xml"/>
@@ -10,6 +10,156 @@
     <logo>https://monkeylmj.github.io//images/avatar.png</logo>
     <icon>https://monkeylmj.github.io//favicon.ico</icon>
     <rights>All rights reserved 2019, 猴子公园</rights>
+    <entry>
+        <title type="html"><![CDATA[Java设计模式总结]]></title>
+        <id>https://monkeylmj.github.io//post/java-pattern-design</id>
+        <link href="https://monkeylmj.github.io//post/java-pattern-design">
+        </link>
+        <updated>2019-07-06T14:12:37.000Z</updated>
+        <summary type="html"><![CDATA[<p>最近又看了一遍刘伟的Java设计模式，这次决定写一篇读后感，趁热将学到的东西和自己的理解总结下来，加深一下印象，也方便自己以后回顾。</p>
+<p>刘伟Java设计模式地址：<a href="https://gof.quanke.name/">https://gof.quanke.name/</a>， 个人认为是讲的比较详细的一本设计模式，值得学习。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>最近又看了一遍刘伟的Java设计模式，这次决定写一篇读后感，趁热将学到的东西和自己的理解总结下来，加深一下印象，也方便自己以后回顾。</p>
+<p>刘伟Java设计模式地址：<a href="https://gof.quanke.name/">https://gof.quanke.name/</a>， 个人认为是讲的比较详细的一本设计模式，值得学习。</p>
+<!-- more -->
+<h2 id="设计模式的7大原则">设计模式的7大原则</h2>
+<ol>
+<li><strong>单一职责</strong></li>
+</ol>
+<p>一个类只做一件事，不承担过多的职责，保持职责单一。如果一个类承担了太多的职责，就可能有更多引起它变化的原因，很不稳定</p>
+<ol start="2">
+<li><strong>开闭原则</strong></li>
+</ol>
+<p>设计模式的终极目标，在不修改现有代码的前提下，进行功能的扩展。</p>
+<ol start="3">
+<li><strong>里氏代换</strong></li>
+</ol>
+<p>使用基类的地方都可以替换为子类对象正常使用，在程序中应尽量使用基类来定义，在运行的时候再确定其子类类型，用子类对象来替换父类对象，其实也就是<em>多态</em>。</p>
+<p>是实现开闭原则的理论基础。</p>
+<ol start="4">
+<li><strong>依赖倒置</strong></li>
+</ol>
+<p>针对抽象/接口编程，尽量依赖抽象，而不依赖具体的实现。</p>
+<p>是实现开闭原则的手段。</p>
+<ol start="5">
+<li><strong>接口隔离</strong></li>
+</ol>
+<p>拆分多个专门的接口，而不是使用单一的复杂接口。因为我们不需要依赖全部的接口方法。</p>
+<ol start="6">
+<li><strong>合成复用</strong></li>
+</ol>
+<p>尽量使用对象的组合，而不是继承来达到复用的目的。</p>
+<p>继承关系的耦合度更高，父类修改会影响到子类，而采用组合，关联的对象只暴露必要的实现，两者耦合度更低。</p>
+<ol start="7">
+<li><strong>迪米特法则</strong></li>
+</ol>
+<p>一个对象应当尽量少地与其他对象发生关系。一个模块的修改势必会影响到与它有关系的其他对象，减少对象之间的耦合联系，就可以缩小修改影响的范围。</p>
+<p><strong>23种Java设计模式或多或少都满足了上面的一些设计原则，来保证可维护性和扩展性，其中开闭原则是一个理想设计模式的终极目标。</strong></p>
+<h2 id="6个创建型模式">6个创建型模式</h2>
+<h3 id="简单工厂模式">简单工厂模式</h3>
+<p><img src="https://i.loli.net/2019/07/06/5d2001fde236457872.png" alt="factory_simple"></p>
+<p>通过工厂来封装产品创建的细节，项目中使用频率较高，使用简单。缺点是：不满足开闭原则，增加新的产品类，需要改动工厂类。</p>
+<h3 id="工厂方法模式">工厂方法模式</h3>
+<p><img src="https://i.loli.net/2019/07/06/5d20051c91b8464907.png" alt=""></p>
+<p>工厂方法模式解决了简单工厂不满足开闭原则的问题，将工厂抽象出了一个<em>Factory</em>接口，每个实现的工厂只生产一个具体的产品。 当需要增加一种产品时，只需要增加一个产品类和一个工厂类，不需要改动现有代码，满足开闭原则。</p>
+<p>缺点：当有大量的产品时，如果一个产品对应一个工厂，将会有大量的工厂类。</p>
+<p>案例：Java中的一些集合类实现了Iterable工厂接口来生产Iterator产品。</p>
+<h3 id="抽象工厂模式">抽象工厂模式</h3>
+<p><img src="https://i.loli.net/2019/07/06/5d20aff65b10a92874.png" alt=""></p>
+<p>抽象工厂模式一定程度上弥补了工厂方法模式的不足（大量工厂类），一个工厂类可以生产一个产品族的所有产品。当增加一个产品族的时候，增加所有产品和工厂类，满足开闭原则；当增加某个产品时，需要修改工厂类，不满足开闭原则，称之为开闭原则的倾斜性。</p>
+<h3 id="单例模式">单例模式</h3>
+<p><img src="https://i.loli.net/2019/07/06/5d20b4079e5e820804.png" alt=""></p>
+<p>单例模式非常简单，实现方式有饿汉模式、懒汉模式（线程安全）、Holder</p>
+<h3 id="原型模式">原型模式</h3>
+<p><img src="https://i.loli.net/2019/07/06/5d20b61698cfd64499.png" alt=""></p>
+<p>原型模式就是克隆，当一个对象的创建非常复杂时，可以快速创建对象的副本。在Java中就是实现一个Cloneable接口，然后复写clone方法。需要注意浅拷贝和深拷贝的问题。</p>
+<h3 id="建造者模式">建造者模式</h3>
+<p><img src="https://i.loli.net/2019/07/06/5d20bb2ed5aa547635.png" alt=""></p>
+<p>使用频率非常高的一种设计模式。如果要创建的对象有很多参数，并且其中某些参数还是可选的，用构造函数来创建的话就需要提供好多个重载来满足不同的配置，甚至还要记住这些参数的顺序。这种情况就可以使用建造者模式进行优化，通过配置参数的方式一步一步组装完成一个对象。</p>
+<p>案例：OKHttp、Dialog等很多开源项目都采用了建造者方式来创建复杂对象。</p>
+<h2 id="7个结构型模式">7个结构型模式</h2>
+<h3 id="适配器模式">适配器模式</h3>
+<p><img src="https://i.loli.net/2019/07/07/5d219c09e879034370.png" alt=""></p>
+<p>当新旧接口不一致时，使用适配器模式适配旧接口为新的接口。</p>
+<p>案例：Android中的Adapter，适配各种各样的数据，提供ViewHolder。</p>
+<h3 id="桥接模式">桥接模式</h3>
+<p><img src="https://i.loli.net/2019/07/07/5d219f138cd8188895.png" alt=""></p>
+<p>当一个业务有多个不同的维度变化时，使用继承会产生大量的类并且不满足开闭原则，使用组合对两个维度进行抽象层的桥接，可以方便以后的扩展，增加任何一个维度的实现都只需要增加一个类，不需要对现有逻辑做修改。</p>
+<p>案例：</p>
+<p>Android源码的ListView和GridView那块，AdapterView是一个维度，Adapter是另一个维度，通过AdapterView#setAdatper()进行桥接，最终结果是ListView、GridView可以和任意的Adapter进行两两组合。</p>
+<h3 id="组合模式">组合模式</h3>
+<p><img src="https://i.loli.net/2019/07/09/5d24a48e0526e72509.png" alt=""></p>
+<p>组合模式的目的就是：对于一个树型结构，能够采用一种一致的方式来处理叶子节点和容器节点。 如UML所示，叶子节点和容器节点都实现了Component接口，我们可以一致地调用operation接口进行处理，而不用care他是叶子还是容器。对于容器节点，多了一些管理叶子节点的方法，在构造树的时候使用。</p>
+<p>案例：Android中的View树就是采用组合模式，绘制的时候只需要调用measure方法，不用管当前是View还是ViewGroup。</p>
+<h3 id="装饰者模式">装饰者模式</h3>
+<p><img src="https://i.loli.net/2019/07/07/5d21a59e65e8c61056.png" alt=""></p>
+<p>装饰者模式的作用是通过装饰者为目标增强功能。装饰者和被装饰者实现同个接口。</p>
+<p>案例：Java的InputStream、OutStream用到了装饰者。</p>
+<h3 id="外观模式">外观模式</h3>
+<p><img src="https://i.loli.net/2019/07/09/5d24a4bde8bf220423.png" alt=""></p>
+<p>当业务中有多个子系统时，可以定义一个外观类提供更高层的接口，内部调用各个子系统的功能，实现客户端和各个子系统的解耦。典型的迪米特法则，一个实体尽可能与更少的实体发生关系。</p>
+<h3 id="享元模式">享元模式</h3>
+<p><img src="https://i.loli.net/2019/07/07/5d21ac4eb6f1889023.png" alt=""></p>
+<p>书中使用棋盘中的黑子和白子来举例享元模式，对应的UML图如上图所以，根据案例来理解享元模式比较简单。</p>
+<p>享元模式是为了优化内存占用的问题，当一个系统中有大量重复对象的时候(黑子、白子)，我们通过享元模式来共享内存最终达到减少内存占用的目的。</p>
+<p>使用享元模式要区分对象的内部状态和外部状态。内部状态就是保持不变，可以共享的一部分，在案例中就是颜色这个属性，所有的白子都可以共享白色这个内部状态。外部状态就是会随着环境进行变化的部分，在案例中就是棋子坐标，所有的白子都有各自的坐标。使用享元模式时，对于内部状态我们可以共享内存，对于外部状态，我们需要提供方法来接受外部状态对象（Coordinate），实现共享对象的不同显示。</p>
+<p>网上很多地方认为对象池(比如Message对象池)是享元模式的一种应用，我认为对象池和享元池完全是解决不同的问题，两者根本不能混为一谈。</p>
+<p><em>对象池：</em></p>
+<p>为了解决不断创建对象、销毁对象导致内存抖动问题，使用对象池来复用之前丢弃的对象。业务场景上并没有在同一时间共享同一个对象的内存，而是在时间上先后使用同一个对象。</p>
+<p><em>享元池：</em></p>
+<p>享元池是为了解决大量重复相似对象的使用导致的内存占用过大问题，享元池中的对象各不相同，业务场景上在同一时间某个对象被共享使用。</p>
+<h3 id="代理模式">代理模式</h3>
+<p><img src="https://i.loli.net/2019/07/07/5d21aeb48fdc291241.png" alt=""></p>
+<p>代理模式从UML图上看跟装饰者模式很相似：都是实现同个接口，代理类代理目标类，装饰者装饰被装饰者，好像是同个东西换了个名字？其实不然，总结了下两者不同的地方：</p>
+<p>1、应用场景上，代理模式是为了帮助目标类增强一些自己不关心的事，比如日志代理，在目标类前后加一些日志。而装饰模式则是用来增强自身的功能，比如Java的InputStream那些的子类装饰类，提供了一些更方便的接口给我们调用。</p>
+<p>2、使用方式上，代理模式一般在代理类中确定了要被代理的目标对象，客户端根本不知道被代理类的存在。而装饰模式中被装饰者对象需要客户端创建提供，并且可以层层嵌套，层层装饰</p>
+<h2 id="11个行为性模式">11个行为性模式</h2>
+<h3 id="职责链模式">职责链模式</h3>
+<p><img src="https://i.loli.net/2019/07/08/5d228a282551048801.png" alt=""></p>
+<p>将请求发送者和处理者解耦，发送者不需要关心到底谁处理了事件，只需要将请求发送到链上。</p>
+<p>案例：OKHttp框架 https://monkeylmj.github.io/post/okhttp/</p>
+<h3 id="命令模式">命令模式</h3>
+<p><img src="https://i.loli.net/2019/07/08/5d228c766bee637332.png" alt=""></p>
+<p>通过命令对象将请求的发送者和处理者进行解耦，发送者只需要发出一个命令，不需要关心谁处理了这个请求（具体的Command知道谁处理了），类似于开关与灯泡的关系，一个开关并不关心自己控制哪个灯泡的亮灭，通过电线（命令）来决定。</p>
+<h3 id="解释器模式">解释器模式</h3>
+<p><img src="https://i.loli.net/2019/07/08/5d229202ca46646307.png" alt=""></p>
+<p>解释器模式的应用场景是解释语言文法，将其抽象成一棵语法树然后解释执行。</p>
+<p>从UML图来看跟组合模式基本是一个东西，两者都是操作树型结构。这里我也分不清两者的区别，可能只是应用场景上的不同，解释器用来解释语句？？</p>
+<h3 id="迭代者模式">迭代者模式</h3>
+<p><img src="https://i.loli.net/2019/07/08/5d229839ae3ca30068.png" alt=""></p>
+<p>对集合对象的遍历逻辑如果放在集合对象中，会造成集合对象职责过重，并且更换遍历方式时必须修改现有代码，不符合开闭原则。所以可以将遍历部分的逻辑抽离到迭代器中单独变化。</p>
+<p>UML图中是工厂方法模式和迭代器模式的结合使用。使用迭代器模式之后，可以在满足开闭原则的前提下为集合对象更换迭代方式。</p>
+<h3 id="中介者模式">中介者模式</h3>
+<p><img src="https://i.loli.net/2019/07/08/5d2331a6a801649049.png" alt=""></p>
+<p>对于多个对象之间的复杂交互，采用传统的方案有几个缺点：</p>
+<p>1、系统结构复杂，耦合度高。每个组件都与其他组件相互关联和调用，系统呈网状结构。</p>
+<p>2、组件的可重用性差。因为一个组件与其他组件有很强的关联，导致其没有其他组件的支持很难被重用。</p>
+<p>3、可扩展性差。因为组件之间的复杂关系，导致增加一个组件，需要修改系统中大量的地方，不满足开闭原则</p>
+<p>根据迪米特法则，一个类应该尽可能少地与其他类产生关系，通常的做法就是增加一层封装。在这里，增加的这一层就是中介者。中介者关联了所有的组件，任何一个组件都只需要与中介者发生关系，通过中介者与其他组件进行关联调用，整个系统结构呈星状。</p>
+<h3 id="备忘录模式">备忘录模式</h3>
+<p><img src="https://i.loli.net/2019/07/08/5d23360b2c9aa32383.png" alt=""></p>
+<p>备忘录模式非常简单，当需要记录一个对象在某个时刻的状态，以后进行恢复的时候可以选择备忘录模式。</p>
+<p>案例：Android的onSaveInstanceState和onRestoreInstanceState实现就是备忘录模式，在Activity异常关闭时记录下必要的状态，下次打开时进行恢复。</p>
+<h3 id="观察者模式">观察者模式</h3>
+<p><img src="https://i.loli.net/2019/07/08/5d2339040110c22115.png" alt=""></p>
+<p>使用频率最高的一种设计模式，各种Callback。</p>
+<h3 id="状态者模式">状态者模式</h3>
+<p><img src="https://i.loli.net/2019/07/08/5d233a5a755c077928.png" alt=""></p>
+<p>状态模式适用于存在多个状态的系统。如果使用传统的方案（不分状态类），则需要在一个类中使用变量来控制各个状态，然后会有大量的if else判断和状态切换的代码，增加状态或者修改都十分麻烦，不满足开闭原则。</p>
+<p>增加状态类之后，可以将某个状态的行为都封装在一起，满足了单一职责原则。环境类Context中关联当前的状态，只负责将请求发到当前状态上，而不需要关心当前状态是什么。如果增加一个状态，也只需要增加一个类，并且处理好状态之间的转换关系即可，满足开闭原则。</p>
+<h3 id="策略模式">策略模式</h3>
+<p><img src="https://i.loli.net/2019/07/09/5d23d97749aa530115.png" alt=""></p>
+<p>比较简单，当需要切换不同策略时，可以使用策略模式，抽象一个接口出来。</p>
+<h3 id="模板方法模式">模板方法模式</h3>
+<p><img src="https://i.loli.net/2019/07/09/5d23da41a29f322354.png" alt=""></p>
+<p>当一个操作是一个框架，有一个固定的执行流程，其中某些流程是共同的，某些是有差异的，就可以使用模板方法模式，将框架和共同的步骤封装在父类中，不同的步骤用抽象方法代替，由子类来实现具体的操作。</p>
+<h3 id="访问者模式">访问者模式</h3>
+<p><img src="https://i.loli.net/2019/07/09/5d23dd4bb203e93652.png" alt=""></p>
+<p>如果对于一个复杂对象有很多种访问处理方式，可以使用访问者模式将访问对象的行为封装到单独访问类中，满足单一职责。增加新的访问操作，只需要再添加一个具体访问类即可，满足开闭原则。增加元素类型，需要修改抽象访问类添加对象的访问方法，不满足开闭原则。</p>
+<p>至此，23种设计模式已经过了一遍，个人认为他们之间有很多的共性，有些设计模式的UML图几乎是一模一样的，但是他们在应用的场景上有差异，只有在实践中多用才能慢慢掌握这些设计原则，做到&quot;手中无模式，心中有模式&quot;</p>
+<p>23种设计模式的UML图: <a href="https://www.processon.com/view/link/5d1fff5de4b0d16653f67a39">https://www.processon.com/view/link/5d1fff5de4b0d16653f67a39</a></p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Android性能优化 - 内存优化]]></title>
         <id>https://monkeylmj.github.io//post/android-performance-memory</id>
@@ -2766,176 +2916,6 @@ public static Looper myLooper() {
 <h2 id="参考">参考</h2>
 <p>《Android开发艺术探索》一书</p>
 <p>Android源码</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[线程池的使用总结]]></title>
-        <id>https://monkeylmj.github.io//post/tread-pool</id>
-        <link href="https://monkeylmj.github.io//post/tread-pool">
-        </link>
-        <updated>2016-03-07T12:08:50.000Z</updated>
-        <summary type="html"><![CDATA[<p>本篇是对Java线程池使用的总结，系统记录下线程池的用法。</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>本篇是对Java线程池使用的总结，系统记录下线程池的用法。</p>
-<!-- more -->
-<h2 id="为什么使用线程池">为什么使用线程池？</h2>
-<ol>
-<li>
-<p>相比于每次都创建新的Thread，通过重用线程池中的线程，减少了创建线程和销毁线程带来的性能开销。</p>
-</li>
-<li>
-<p>对线程进行管理控制，控制线程并发数量、定时执行、间隔执行等。</p>
-</li>
-</ol>
-<h2 id="java线程池模型的uml类图">Java线程池模型的UML类图</h2>
-<p><img src="https://i.loli.net/2018/08/04/5b65c33dcf4aa.png" alt=""></p>
-<p>其中 <strong>ThreadPoolExecutor</strong> 是线程池的真正实现，从构造方法中可以看出其创建的细节和需要配置的参数</p>
-<pre><code class="language-java">
-public ThreadPoolExecutor(int corePoolSize,
-                          int maximumPoolSize,
-                          long keepAliveTime,
-                          TimeUnit unit,
-                          BlockingQueue&lt;Runnable&gt; workQueue,
-                          ThreadFactory threadFactory,
-                          RejectedExecutionHandler handler) {...}
-
-</code></pre>
-<p>下面对每个参数进行解释：</p>
-<ul>
-<li>
-<p><strong>corePoolSize</strong>: 线程池的核心线程数，默认情况下创建的核心线程不会被销毁，除非设置ThreadPoolExecutor#allowCoreThreadTimeOut为true,则根据keepAliveTime指定的超时时长进行销毁。</p>
-</li>
-<li>
-<p><strong>maximumPoolSize</strong>: 线程池容纳的最大线程数（<em>除了核心线程，剩下的为非核心线程</em>），线程池中运行的线程不能超过此数量。</p>
-</li>
-<li>
-<p><strong>keepAliveTime</strong>: 非核心线程闲置时的超时时长，超过此时间，非核心线程会被销毁，如果设置ThreadPoolExecutor#allowCoreThreadTimeOut为true，这核心线程也享有此特性。</p>
-</li>
-<li>
-<p><strong>unit</strong>: 超时时长的时间单位。</p>
-</li>
-<li>
-<p><strong>workQueue</strong>: 缓存的任务队列，当添加的任务数量大于corePoolSize时，任务将会被添加到此队列中进行缓存。</p>
-</li>
-<li>
-<p><strong>threadFactory</strong>:线程池用来创建线程的工厂类，只有一个<strong>newThread(Runnable r)</strong> 的接口方法。</p>
-</li>
-<li>
-<p><strong>RejectedExecutionHandler</strong>: 拒绝策略。当线程池中的线程达到最大线程数并且缓存任务队列已满，会调用此对象来进行处理。</p>
-<p>RejectedExecutionHandler是一个接口，</p>
-<pre><code class="language-java">public interface RejectedExecutionHandler {
-    void rejectedExecution(Runnable r, ThreadPoolExecutor executor);
-}
-</code></pre>
-<p>有四个实现类，对应4种处理策略，从源码中可以看出他们的作用：</p>
-<p><strong>AbortPolicy</strong> 丢弃当前添加的任务并且抛出RejectedExecutionException异常</p>
-<p><strong>DiscardPolicy</strong> 丢弃当前添加的任务，但是不抛出异常</p>
-<p><strong>DiscardOldestPolicy</strong> 丢弃最老的任务，也就是任务队列队首的任务，然后再尝试执行当前添加的任务</p>
-<p><strong>CallerRunsPolicy</strong> 由调用线程处理该任务</p>
-</li>
-</ul>
-<h2 id="线程池的执行策略">线程池的执行策略</h2>
-<ol>
-<li>
-<p>如果线程池中的线程数量&lt;核心线程数量，直接创建一个核心线程执行该任务。</p>
-</li>
-<li>
-<p>如果线程池中的线程数量&gt;=核心线程数量，则将任务插入到缓存任务队列中，如上 <strong>workQueue</strong> 参数指定的队列中。</p>
-</li>
-<li>
-<p>如果缓存任务队列已满不能继续添加任务，并且线程池中的线程数量&lt;最大线程数，则创建一个非核心线程来执行该任务。</p>
-</li>
-<li>
-<p>如果缓存任务队列和线程池均已满，则调用 <strong>RejectedExecutionHandler#rejectedExecution</strong> 进行处理。</p>
-</li>
-</ol>
-<p><strong>另外：</strong></p>
-<ul>
-<li>
-<p>如果线程池中的线程执行任务完毕从而闲置，则从缓存任务队列头取出一个任务，继续进行执行。（<strong>优点一，重用已经创建的线程</strong>）</p>
-</li>
-<li>
-<p>如果线程池中线程闲置，并且缓存队列中已经没有任务，则线程池会根据超时规则进行线程的销毁。一般情况下，核心线程不进行销毁，非核心线程根据设置的超时间长进行销毁。</p>
-</li>
-<li>
-<p>处理任务的优先级： 核心线程池 &gt; 缓存任务队列 &gt; 非核心线程池</p>
-</li>
-</ul>
-<h2 id="常用的4种线程池模型">常用的4种线程池模型</h2>
-<p><strong>Executors</strong> 提供了几个静态工厂方法来创建几种不同特性的线程池，本质上就是通过配置ThreadPoolExecutor构造方法的参数组合，实现具有不同特性的ThreadPool。</p>
-<h4 id="1-fixedthreadpool">1、FixedThreadPool</h4>
-<p>固定线程数量的线程池</p>
-<pre><code class="language-java">
-public static ExecutorService newFixedThreadPool(int nThreads) {
-    return new ThreadPoolExecutor(nThreads, nThreads,
-                                  0L, TimeUnit.MILLISECONDS,
-                                  new LinkedBlockingQueue&lt;Runnable&gt;());
-}
-
-</code></pre>
-<p>从ThreadPoolExecutor的构造方法参数中可以看出，FixedThreadPool 中只有核心线程。当核心线程用完后，新添加的任务进入任务队列<strong>new LinkedBlockingQueue<Runnable>()</strong> 中：</p>
-<pre><code class="language-java">public LinkedBlockingQueue() {
-    this(Integer.MAX_VALUE);
-}
-</code></pre>
-<p>默认的构造方法创建了一个无限大的队列，所以我们可以添加任意数目的任务，但是最大并发数只是<em>nThreads</em>。</p>
-<p>前面说过，默认情况下，核心线程是不会销毁的，即使它们执行完任务变为空闲状态，这样带来的好处是可以快速响应之后添加的新任务（免去了创建线程的性能开销）。</p>
-<p>但是可能带来一些意想不到的问题，比如<strong>内存泄露</strong>。之前在进行Andorid项目的性能优化时就遇到过线程池带来的内存泄露，正是由于线程池中的核心线程持有了外部的对象（View、Activity等）,并且自身不会主动销毁，导致Activity等持有的其他大对象迟迟不能被GC回收，内存泄露。</p>
-<p>当然，有解决方案：</p>
-<p><strong>ThreadPoolExecutor#shutdown()</strong> 关闭线程池。</p>
-<p>调用此方法后，ExecutorService不会立即关闭，但是不再接受新的任务，直到所有线程都执行完毕才会关闭，所有在shutdown执行前提交的任务都会得到执行。</p>
-<p><strong>ThreadPoolExecutor#shutdownNow()</strong> 立即关闭线程池。</p>
-<p>调用此方法，会尝试关闭所有正在执行的任务（但是不能做任何的保证，它们可能都停止，也可能都完成），跳过正在等待的任务。</p>
-<p>最后，使用弱引用的方式持有外部对象也是一个保险的做法。</p>
-<h4 id="2-cachedthreadpool">2、CachedThreadPool</h4>
-<p>线程数量不定的线程池</p>
-<pre><code class="language-java">public static ExecutorService newCachedThreadPool() {
-   return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                 60L, TimeUnit.SECONDS,
-                                 new SynchronousQueue&lt;Runnable&gt;());
-}
-</code></pre>
-<p>同样，从构造方法参数中可以看出，CachedThreadPool没有核心线程池，最大线程数量为无限大，也就是可以并发执行任意数目的线程（超时销毁时长为60s)。</p>
-<p>其中 <strong>new SynchronousQueue<Runnable>()</strong> 是一个特殊的任务队列，可以理解为一个管道，只能通过任务，不能存储任何任务，这就导致所有插入的任务都会立即得到执行。</p>
-<p>从此线程池的特性看来，这类线程池比较适合执行大量的耗时较少的任务。一方面，线程的并发数量是无限的。另一方面，60s的超时时长保证闲置的线程销毁，最终整个线程池不包含任何线程，不占用系统宝贵资源。</p>
-<h4 id="3-singlethreadexecutor">3、SingleThreadExecutor</h4>
-<p>只有一个核心线程的线程池</p>
-<pre><code class="language-java">public static ExecutorService newSingleThreadExecutor() {
-    return new FinalizableDelegatedExecutorService
-        (new ThreadPoolExecutor(1, 1,
-                                0L, TimeUnit.MILLISECONDS,
-                                new LinkedBlockingQueue&lt;Runnable&gt;()));
-}
-</code></pre>
-<p>跟FixedThreadPool类似，只是<strong>nThreads</strong>固定为1，算是它的一个特例。确保了所有任务都在同一个线程按顺序同步执行，这里不再多述。</p>
-<h4 id="4-scheduledthreadpool">4、ScheduledThreadPool</h4>
-<p>进行定时以及周期性任务执行的线程池</p>
-<pre><code class="language-java">public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
-    return new ScheduledThreadPoolExecutor(corePoolSize);
-}
-</code></pre>
-<pre><code class="language-java">public ScheduledThreadPoolExecutor(int corePoolSize) {
-    super(corePoolSize, Integer.MAX_VALUE,
-          DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
-          new DelayedWorkQueue());
-}
-</code></pre>
-<p>从UML类图中，可以看出此类线程池的特殊之处-实现了<strong>ScheduledExecutorService</strong>接口，此接口中主要定义如下几个接口方法：</p>
-<pre><code class="language-java">/**
- * 延时delay后执行command
- */
-public ScheduledFuture&lt;?&gt; schedule(Runnable command, long delay, TimeUnit unit);
-
-public &lt;V&gt; ScheduledFuture&lt;V&gt; schedule(Callable&lt;V&gt; callable, long delay, TimeUnit unit);
-
-/**
- * 初始延时initialDelay后，每隔period执行一次command
- */
-public ScheduledFuture&lt;?&gt; scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit);
-
-public ScheduledFuture&lt;?&gt; scheduleWithFixedDelay(Runnable command, long initialDelay,long delay,TimeUnit unit);
-</code></pre>
-<p>使用此类线程池可以定时执行任务和固定周期重复执行任务。</p>
 ]]></content>
     </entry>
 </feed>
