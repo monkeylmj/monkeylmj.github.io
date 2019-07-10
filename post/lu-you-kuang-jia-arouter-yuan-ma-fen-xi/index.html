@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title> 路由框架 ARouter源码分析 | 猴子公园</title>
+<meta name="description" content="坚持比完美更重要">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1562768596978">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://monkeylmj.github.io/">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1562768596978" class="site-logo">
+        <h1 class="site-title">猴子公园</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="https://monkeylmj.github.io/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="https://monkeylmj.github.io//post/about/" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      坚持比完美更重要
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://monkeylmj.github.io//atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title"> 路由框架 ARouter源码分析</h2>
+            <div class="post-date">2019-07-10</div>
+            
+            <div class="post-content">
+              <blockquote>
+<p>ARouter: 一个用于帮助 Android App 进行组件化改造的框架 —— 支持模块间的路由、通信、解耦</p>
+</blockquote>
+<!-- more -->
+<h2 id="背景">背景</h2>
+<p>在组件化架构中，各个组件之间解耦，互相之间无法访问其中的class，但是又需要组件之间能够进行必要的通信来满足部分业务场景，比如页面的跳转和接口的调用。</p>
+<p>对于页面跳转，可以通过发送action的方式启动Activity，只要管理好action就好</p>
+<p>对于接口调用，比如A组件调用B组件的一个方法，需要先抽象出一个接口放到base模块中，B组件通过ServiceLoader将具体的实现注册到其中，A组件运行时再从ServiceLoader中拿到具体的实现完成功能调用。</p>
+<p><strong>ARouter使用注解帮助我们简化上述两种场景，更便捷地完成组件之间的通信。</strong></p>
+<h2 id="使用方式">使用方式</h2>
+<ol>
+<li>依赖</li>
+</ol>
+<pre><code class="language-xml">dependencies {
+  implementation 'com.alibaba:arouter-api:1.5.0'
+  annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
+}
+</code></pre>
+<p>ARouter的相关依赖包有三个：</p>
+<ul>
+<li>arouter-api    核心API</li>
+<li>arouter-annotation   注解类 （arouter-api已经间接依赖，不需要再单独依赖）</li>
+<li>arouter-compiler 注解处理器，在编译的时候根据注解来生成必要的java代码</li>
+</ul>
+<p>其中arouter-compiler主要是通过arouter-annotation提供的注解自动生成相关代码，代码最终生成路径在：</p>
+<p>/build/generated/source/apt/debug/com/alibaba/android/arouter/routes路径下。</p>
+<p><img src="https://i.loli.net/2019/07/10/5d2569995325d36210.png" alt=""></p>
+<ol start="2">
+<li>应用中初始化</li>
+</ol>
+<pre><code class="language-java">if (isDebug()) {           // 这两行必须写在init之前，否则这些配置在init过程中将无效
+    ARouter.openLog();     // 打印日志
+    ARouter.openDebug();   // 开启调试模式(如果在InstantRun模式下运行，必须开启调试模式！线上版本需要关闭,否则有安全风险)
+}
+ARouter.init(mApplication); // 尽可能早，推荐在Application中初始化
+</code></pre>
+<p><strong>对于页面跳转</strong></p>
+<ol>
+<li>在路由目标页面上添加注解</li>
+</ol>
+<pre><code class="language-java">// 在支持路由的页面上添加注解(必选)
+// 这里的路径需要注意的是至少需要有两级，/xx/xx
+@Route(path = &quot;/test/activity&quot;)
+public class YourActivity extend Activity {
+    ...
+}
+</code></pre>
+<ol start="2">
+<li>进行路由跳转</li>
+</ol>
+<pre><code class="language-java">//跳转并携带参数
+ARouter.getInstance().build(&quot;/test/activity&quot;)
+            .withLong(&quot;key1&quot;, 666L)
+            .withString(&quot;key3&quot;, &quot;888&quot;)
+            .withObject(&quot;key4&quot;, new Test(&quot;Jack&quot;, &quot;Rose&quot;))
+            .navigation();
+</code></pre>
+<p><strong>对于接口调用</strong></p>
+<ol>
+<li>首先在base模块中定义接口，必须继承IProvider接口</li>
+</ol>
+<pre><code class="language-java">public interface IBInterface extends IProvider {
+    void methodA();
+    void methodB();
+}
+</code></pre>
+<ol start="2">
+<li>B模块中实现接口，添加path</li>
+</ol>
+<pre><code class="language-java">@Route(path = &quot;/test/bImpl&quot;)
+public class BImpl implements IBInterface {
+
+    @Override
+    public void methodA() {
+
+    }
+
+    @Override
+    public void methodB() {
+
+    }
+
+    @Override
+    public void init(Context context) {
+        //do sth.
+    }
+}
+</code></pre>
+<ol start="3">
+<li>A模块中获取实现，进行调用</li>
+</ol>
+<pre><code class="language-java">IBInterface bInterface = ARouter.getInstance().navigation(IBInterface.class);
+bInterface.methodA();
+</code></pre>
+<h2 id="源码流程分析">源码流程分析</h2>
+<p>ARouter的源码其实十分简单，就几个核心的类。大致的原理是：在初始化的时候，建立一个Map映射（PATH -&gt; 目标类的class对象），在使用的时候根据path来获得这个class对象，然后通过反射创建实例进行调用。</p>
+<p>接下来就看一下一些核心的实现逻辑。</p>
+<p>首先从使用的地方入手分析，简单地一句话背后做了什么事情？</p>
+<pre><code class="language-java">ARouter.getInstance().build(&quot;/test/activity&quot;).navigation()
+</code></pre>
+<blockquote>
+<p>单例模式：</p>
+<p>ARouter.getInstance() 使用双重检测锁实现了ARouter的单例，保证全局只有一个ARouter对象提供服务</p>
+</blockquote>
+<p>ARouter#build</p>
+<pre><code class="language-java">public Postcard build(String path) {
+   return _ARouter.getInstance().build(path);
+}
+
+public Postcard build(String path, String group) {
+   return _ARouter.getInstance().build(path, group);
+}
+
+public Postcard build(Uri url) {
+   return _ARouter.getInstance().build(url);
+}
+</code></pre>
+<p>可以看到其中的所有方法调用基本上都交给了<code>_Arouter</code>来做。</p>
+<p>从ARouter的注释中可以看出作者想使用的是<strong>门面模式</strong>，ARouter是门面，_ARouter中实现了复杂的逻辑等。 但这里感觉怪怪的，因为门面类ARouter的每个方法中只是简单转发给了 _ARouter，而根据门面模式的定义，门面类会对外提供简单的接口，接口中封装多个复杂子系统的调用。显然这里没必要使用门面模式，可能作者当时考虑的太多？</p>
+<p>_Arouter#build</p>
+<pre><code class="language-java">protected Postcard build(String path) {
+        //省略部分...
+         PathReplaceService pService = ARouter.getInstance().navigation(PathReplaceService.class);
+            if (null != pService) {
+                path = pService.forString(path);
+            }
+            return build(path, extractGroup(path));
+    }
+
+protected Postcard build(String path, String group) {
+        PathReplaceService pService = ARouter.getInstance().navigation(PathReplaceService.class);
+        if (null != pService) {
+            path = pService.forString(path);
+        }
+       return new Postcard(path, group);
+}
+</code></pre>
+<p>_Arouter的build方法构造并返回了一个PostCard对象（明信片），这个明信片目前只是简单地包含了Group和Path信息。</p>
+<p>其中Path即为 &quot;/test/activity&quot;, Group为第一个/ /之间的内容，这里为test。 ARouter中利用分组来实现按需加载，在初始化的过程中并不会把所有的路由信息都加载完，而是先加载完分组的信息。等到需要某个分组的路由信息时，再将此分组下的所有路由信息加载到内存。</p>
+<p>另外，PostCard类提供了一系列链式调用的方法来完善自身的数据（传递到其他组件的数据）</p>
+<pre><code class="language-java"> public Postcard withString(@Nullable String key, @Nullable String value) {
+        mBundle.putString(key, value);
+        return this;
+    }
+
+    /**
+     * Inserts a Boolean value into the mapping of this Bundle, replacing
+     * any existing value for the given key.  Either key or value may be null.
+     *
+     * @param key   a String, or null
+     * @param value a boolean
+     * @return current
+     */
+    public Postcard withBoolean(@Nullable String key, boolean value) {
+        mBundle.putBoolean(key, value);
+        return this;
+    }
+
+    /**
+     * Inserts a short value into the mapping of this Bundle, replacing
+     * any existing value for the given key.
+     *
+     * @param key   a String, or null
+     * @param value a short
+     * @return current
+     */
+    public Postcard withShort(@Nullable String key, short value) {
+        mBundle.putShort(key, value);
+        return this;
+    }
+</code></pre>
+<p>下一步，调用navigation完成路由。</p>
+<p>PostCard#navigation</p>
+<pre><code class="language-java">public Object navigation(Context context, NavigationCallback callback) {
+    return ARouter.getInstance().navigation(context, this, -1, callback);
+}
+</code></pre>
+<p>又进入_ARouter#navigation</p>
+<pre><code class="language-java">protected Object navigation(final Context context, final Postcard postcard, final int requestCode, final NavigationCallback callback) {
+        try {
+            LogisticsCenter.completion(postcard);
+        } catch (NoRouteFoundException ex) {
+            logger.warning(Consts.TAG, ex.getMessage());
+
+            if (debuggable()) { // Show friendly tips for user.
+                Toast.makeText(mContext, &quot;There's no route matched!\n&quot; +
+                        &quot; Path = [&quot; + postcard.getPath() + &quot;]\n&quot; +
+                        &quot; Group = [&quot; + postcard.getGroup() + &quot;]&quot;, Toast.LENGTH_LONG).show();
+            }
+
+            if (null != callback) {
+                callback.onLost(postcard);
+            } else {    // No callback for this invoke, then we use the global degrade service.
+                DegradeService degradeService = ARouter.getInstance().navigation(DegradeService.class);
+                if (null != degradeService) {
+                    degradeService.onLost(context, postcard);
+                }
+            }
+
+            return null;
+        }
+
+        if (null != callback) {
+            callback.onFound(postcard);
+        }
+
+        if (!postcard.isGreenChannel()) {   // It must be run in async thread, maybe interceptor cost too mush time made ANR.
+            interceptorService.doInterceptions(postcard, new InterceptorCallback() {
+                /**
+                 * Continue process
+                 *
+                 * @param postcard route meta
+                 */
+                @Override
+                public void onContinue(Postcard postcard) {
+                    _navigation(context, postcard, requestCode, callback);
+                }
+
+                /**
+                 * Interrupt process, pipeline will be destory when this method called.
+                 *
+                 * @param exception Reson of interrupt.
+                 */
+                @Override
+                public void onInterrupt(Throwable exception) {
+                    if (null != callback) {
+                        callback.onInterrupt(postcard);
+                    }
+
+                    logger.info(Consts.TAG, &quot;Navigation failed, termination by interceptor : &quot; + exception.getMessage());
+                }
+            });
+        } else {
+            return _navigation(context, postcard, requestCode, callback);
+        }
+
+        return null;
+    }
+</code></pre>
+<p>这个方法中基本包含了路由的整个过程：</p>
+<p>1、LogisticsCenter.completion(postcard);   继续完善路由信息，之前的路由信息只有path和group，并不知道目标类是哪个，这一步就是完善这些信息，找到最后路由哪个对象。</p>
+<p>2、 degradeService.onLost(context, postcard);  全局降级服务。找不到路由时能够使用降级服务进行一些处理。</p>
+<p>3、interceptorService.doInterceptions(…)  拦截器处理，如果没有拦截最终调用_navigation()进行最后的路由操作。</p>
+<p>细化一下上面的步骤：</p>
+<p>LogisticsCenter#completion(postcard);</p>
+<pre><code class="language-java">public synchronized static void completion(Postcard postcard) {
+        RouteMeta routeMeta = Warehouse.routes.get(postcard.getPath());
+        if (null == routeMeta) {    // Maybe its does't exist, or didn't load.
+            Class&lt;? extends IRouteGroup&gt; groupMeta = Warehouse.groupsIndex.get(postcard.getGroup());  // Load route meta.
+                    IRouteGroup iGroupInstance = groupMeta.getConstructor().newInstance();
+                    iGroupInstance.loadInto(Warehouse.routes);
+                    Warehouse.groupsIndex.remove(postcard.getGroup());
+                completion(postcard);   // Reload
+            }
+        } else {
+            postcard.setDestination(routeMeta.getDestination());
+            postcard.setType(routeMeta.getType());
+            postcard.setPriority(routeMeta.getPriority());
+            postcard.setExtra(routeMeta.getExtra());
+        	//省略...
+         }
+
+            switch (routeMeta.getType()) {
+                case PROVIDER:  // if the route is provider, should find its instance
+                    // Its provider, so it must implement IProvider
+                    Class&lt;? extends IProvider&gt; providerMeta = (Class&lt;? extends IProvider&gt;) routeMeta.getDestination();
+                    IProvider instance = Warehouse.providers.get(providerMeta);
+                    if (null == instance) { // There's no instance of this provider
+                        IProvider provider;
+                        try {
+                            provider = providerMeta.getConstructor().newInstance();
+                            provider.init(mContext);
+                            Warehouse.providers.put(providerMeta, provider);
+                            instance = provider;
+                        } catch (Exception e) {
+                            throw new HandlerException(&quot;Init provider failed! &quot; + e.getMessage());
+                        }
+                    }
+                    postcard.setProvider(instance);
+                    postcard.greenChannel();    // Provider should skip all of interceptors
+                    break;
+                case FRAGMENT:
+                    postcard.greenChannel();    // Fragment needn't interceptors
+                default:
+                    break;
+            }
+        }
+    }
+</code></pre>
+<p>这一步就是：LogisticsCenter （物流中心）根据 Warehouse（仓库）中加载的路由信息来完善PostCard（明信片）。</p>
+<p>其中Warehouse中包含了一些路由信息的Map映射，这一部分的关键数据在ARouter初始化时加载(LogisticsCenter#init方法中，利用了注解处理器生成的一些类将数据加载进Warehouse中，可以进去看看加载的逻辑，有助于理解Warehouse中数据的意义)。</p>
+<pre><code class="language-java">class Warehouse {
+    // Cache route and metas
+    static Map&lt;String, Class&lt;? extends IRouteGroup&gt;&gt; groupsIndex = new HashMap&lt;&gt;();
+    static Map&lt;String, RouteMeta&gt; routes = new HashMap&lt;&gt;();
+
+    // Cache provider
+    static Map&lt;Class, IProvider&gt; providers = new HashMap&lt;&gt;();
+    static Map&lt;String, RouteMeta&gt; providersIndex = new HashMap&lt;&gt;();
+
+    // Cache interceptor
+    static Map&lt;Integer, Class&lt;? extends IInterceptor&gt;&gt; interceptorsIndex = new UniqueKeyTreeMap&lt;&gt;(&quot;More than one interceptors use same priority [%s]&quot;);
+    static List&lt;IInterceptor&gt; interceptors = new ArrayList&lt;&gt;();
+}
+</code></pre>
+<p>简单说一下其中每个字段的数据：</p>
+<p><strong>groupsIndex</strong>: 记录了组名 - 组加载类（注解生成）的映射，生成逻辑如下：</p>
+<pre><code class="language-java">/**
+ * DO NOT EDIT THIS FILE!!! IT WAS GENERATED BY AROUTER. */
+public class ARouter$$Root$$app implements IRouteRoot {
+  @Override
+  public void loadInto(Map&lt;String, Class&lt;? extends IRouteGroup&gt;&gt; routes) {
+    routes.put(&quot;activity&quot;, ARouter$$Group$$activity.class); //这些class都是注解自动生成的。
+    routes.put(&quot;main&quot;, ARouter$$Group$$main.class);
+    routes.put(&quot;test&quot;, ARouter$$Group$$test.class);
+  }
+}
+</code></pre>
+<p><strong>routes</strong>: 记录了path - RouteMeta的映射，生成逻辑如下：</p>
+<pre><code class="language-java">/**
+ * DO NOT EDIT THIS FILE!!! IT WAS GENERATED BY AROUTER. */
+public class ARouter$$Group$$activity implements IRouteGroup {
+  @Override
+  public void loadInto(Map&lt;String, RouteMeta&gt; atlas) {
+    atlas.put(&quot;/activity/DeviceListActivity&quot;, RouteMeta.build(RouteType.ACTIVITY, DeviceListActivity.class, &quot;/activity/devicelistactivity&quot;, &quot;activity&quot;, null, -1, -2147483648));
+  }
+}
+</code></pre>
+<p>前面也说过当通过一个path获取不到目标class的时候，就会去加载path对应的组下的所有path信息，就是在这里加载的。</p>
+<p><strong>providers</strong> : 保存了反射生成的目标实例。我们每次通过navigation获取到的provider对象都是同一个，就是因为这里进行了缓存，保证只有一个实例，单例。</p>
+<p><strong>providerIndex</strong>: 保存Class对象-RouteMeta的映射。</p>
+<pre><code class="language-java">public class ARouter$$Providers$$app implements IProviderGroup {
+  @Override
+  public void loadInto(Map&lt;String, RouteMeta&gt; providers) {
+    providers.put(&quot;com.seewo.swstclient.module.base.api.IApp&quot;, RouteMeta.build(RouteType.PROVIDER, App.class, &quot;/main/app&quot;, &quot;main&quot;, null, -1, -2147483648));
+    providers.put(&quot;com.seewo.swstclient.module.base.api.connectmode.IConnectModeManager&quot;, RouteMeta.build(RouteType.PROVIDER, ConnectModeManager.class, &quot;/main/connectModeManager&quot;, &quot;main&quot;, null, -1, -2147483648));
+  }
+}
+</code></pre>
+<p>我们通过navigation获取provider实例的时候传入参数的是Class对象，<code>ARouter.getInstance().navigation(IBInterface.class)</code>，这里就是通过这个映射关系，来拿到path的，下一步再根据path拿到具体的实例。</p>
+<p>将Postcard信息补充完整后（其实就是拿到了目标Class），接下来就是根据类型来对应做一些操作：</p>
+<p>如果是ACTIVITY类型，就利用目标Class做跳转操作。</p>
+<p>如果是PROVIDER类型，就通过反射获取目标Class的实例。</p>
+<p>_ARouter#  _navigation()</p>
+<pre><code class="language-java">private Object _navigation(final Context context, final Postcard postcard, final int requestCode, final NavigationCallback callback) {
+        final Context currentContext = null == context ? mContext : context;
+
+        switch (postcard.getType()) {
+            case ACTIVITY:
+                // Build intent
+                final Intent intent = new Intent(currentContext, postcard.getDestination());
+                intent.putExtras(postcard.getExtras());
+
+                // Set flags.
+                int flags = postcard.getFlags();
+                if (-1 != flags) {
+                    intent.setFlags(flags);
+                } else if (!(currentContext instanceof Activity)) {    // Non activity, need less one flag.
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                }
+
+                // Set Actions
+                String action = postcard.getAction();
+                if (!TextUtils.isEmpty(action)) {
+                    intent.setAction(action);
+                }
+                startActivity(requestCode, currentContext, intent, postcard, callback);
+
+                break;
+</code></pre>
+<p>Over.</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://monkeylmj.github.io//tag/yuan-ma-jie-xi" class="tag">
+                    源码解析
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://monkeylmj.github.io//post/java-pattern-design">
+                  <h3 class="post-title">
+                    Java设计模式总结
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'e9cdf34c05a98e6b38aa',
+        clientSecret: '5575ef73b184711f05560b414b117640a727edf7',
+        repo: 'monkeylmj.github.io',
+        owner: 'monkeylmj',
+        admin: ['monkeylmj'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>
