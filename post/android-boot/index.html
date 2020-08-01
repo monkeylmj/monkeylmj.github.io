@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1562768596978">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1596276237496">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
@@ -36,7 +36,7 @@
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://monkeylmj.github.io/">
-        <img src="https://monkeylmj.github.io//images/avatar.png?v=1562768596978" class="site-logo">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1596276237496" class="site-logo">
         <h1 class="site-title">猴子公园</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -224,7 +224,7 @@
 <p>从注释中找到答案，Recovery服务通过/cache来和主系统交互（注释第一行）。执行RecoverySystem#installPackage(path)之后会将path路径写入*/cache/recovery/command*中(命令大概是这样:--update_package=[path])，然后Recovery服务读取到update package的命令之后就进行升级。 除了升级命令之外，常用的还有wipe data、wipe cache等命令，都是类似地将命令写入command文件中与Recovery服务交互。Android的设置中的恢复出厂设置其实就是写了一个wipe data命令到 command文件中，让Recovery服务启动时去重置数据。</p>
 <p>另外，Recovery服务在读取到 <em>/cache/recovery/command</em>中的命令之后，还会将此命令写入到BCB控制块的recovery字段，主要是用来防止在升级等过程中突然断电，再次重启之后仍然能够进入Recovery，继续之前的升级功能。在升级等操作完成之后会清空BCB和/cache/recovery/command，避免下次重启之后仍然进入Recovery， 这些都是一些细节问题。</p>
 <p>Recovery服务的具体流程可以看下面这张图：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c79ee0e42f07.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/03/02/5c79ee0e42f07.png" alt="" loading="lazy"></figure>
 <p><strong>总结</strong></p>
 <p>1、Recovery服务通过/cache来和主系统交互，Andorid系统一般是将命令写入/cache/recovery/command中来和Recovery服务进行交互。</p>
 <p>2、Recovery服务能够做的功能有：工厂重置、OTA升级、安全文件系统的启用/禁用。</p>
@@ -259,7 +259,7 @@ fastboot reboot
             
               <div class="tag-container">
                 
-                  <a href="https://monkeylmj.github.io//tag/android-yuan-ma-jie-xi" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/android-yuan-ma-jie-xi" class="tag">
                     Android源码解析
                   </a>
                 
@@ -268,7 +268,7 @@ fastboot reboot
             
               <div class="next-post">
                 <div class="next">下一篇</div>
-                <a href="https://monkeylmj.github.io//post/android-theme-style-attr">
+                <a href="https://monkeylmj.github.io/post/android-theme-style-attr">
                   <h3 class="post-title">
                     Android之Theme、Style、Attr
                   </h3>

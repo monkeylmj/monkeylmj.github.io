@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1562768596978">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1596276237496">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
@@ -36,7 +36,7 @@
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://monkeylmj.github.io/">
-        <img src="https://monkeylmj.github.io//images/avatar.png?v=1562768596978" class="site-logo">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1596276237496" class="site-logo">
         <h1 class="site-title">猴子公园</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -151,7 +151,7 @@
 <li>如果仍然没有Activity响应上述两个Action，则系统会发送优先级最低的<code>ACTION_TAG_DISCOVERED</code>的Intent。</li>
 </ol>
 <p>图为标签分发系统：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a184962704.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/03/02/5c7a184962704.png" alt="" loading="lazy"></figure>
 <h3 id="nfc数据格式">NFC数据格式</h3>
 <p>NFC的数据格式可以分为NDEF和非NDEF两种。<strong>NDEF</strong>是NFC Forum定义的一种标准格式，在Android中得到最大范围的支持，是Android最推荐使用的格式。</p>
 <ul>
@@ -159,7 +159,7 @@
 <p><strong>NDEF数据</strong>在AndroidSDK中被封装成一个包含多个<strong>NdefRecord</strong>的<strong>NdefMessage</strong>，<strong>android.nfc.tech.Ndef</strong>类封装了各种便捷的读写数据的操作。</p>
 <p>前面说过当Android设备发现NDEF格式的标签之后会发出<code>ACTION_NDEF_DISCOVERED</code>类型的Intent。通常在intent中还会带上更加具体的mime type &amp; URI等数据，以便筛选更加具体的Activity来进行处理（这个是Android推荐使用这个格式的原因之一）。下面就来说说，NDEF具体的数据格式以及Android如何分析NDEF数据来生成对应的Intent。</p>
 <p><strong>NDEF数据格式</strong>：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a185c4e7fc.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2019/03/02/5c7a185c4e7fc.png" alt="" loading="lazy"></figure>
 <ol>
 <li><strong>TNF</strong> 3bits的字段，标识了如何解析第二个字段type。包含的值见表一：</li>
 </ol>
@@ -549,9 +549,9 @@ protected void onNewIntent(Intent intent) {
 </code></pre>
 <h2 id="card-emulation-mode">Card emulation mode</h2>
 <p>Android4.4之前通过在Android设备中内置一个芯片来实现。通信路径如下图：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a1893b60b8.png" alt=""></p>
+<figure data-type="image" tabindex="3"><img src="https://i.loli.net/2019/03/02/5c7a1893b60b8.png" alt="" loading="lazy"></figure>
 <p>Android4.4之后可以通过纯软件模拟NFC卡。通信路径如下图：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a189e94ec6.png" alt=""></p>
+<figure data-type="image" tabindex="4"><img src="https://i.loli.net/2019/03/02/5c7a189e94ec6.png" alt="" loading="lazy"></figure>
 <p>在Android上层程序只需实现一个服务，并且给服务绑定一个ID，便可以模拟成NFC卡，根据读卡器发出的ID响应数据。</p>
 <pre><code class="language-java">public class MyHostApduService extends HostApduService {
     @Override
@@ -585,15 +585,15 @@ protected void onNewIntent(Intent intent) {
 </code></pre>
 <hr>
 <h2 id="相关资料">相关资料</h2>
-<p>1.NDEF数据解析实例：<a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">http</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note#</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">/</a></p>
-<p>2.AndnroidNFC官网介绍：<a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">https</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">://</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">developer.android.com/guide/topics/connectivity/nfc/index.html</a></p>
+<p>1.NDEF数据解析实例：<a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">http</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">😕/note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note#</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">/</a></p>
+<p>2.AndnroidNFC官网介绍：<a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">https</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">😕/</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">developer.android.com/guide/topics/connectivity/nfc/index.html</a></p>
 <p>3.NFC相关的应用：NXPTagWriter、NXPTagInfo、MIFARE经典工具</p>
 
             </div>
             
               <div class="tag-container">
                 
-                  <a href="https://monkeylmj.github.io//tag/nfc" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/nfc" class="tag">
                     NFC
                   </a>
                 
@@ -602,7 +602,7 @@ protected void onNewIntent(Intent intent) {
             
               <div class="next-post">
                 <div class="next">下一篇</div>
-                <a href="https://monkeylmj.github.io//post/handler">
+                <a href="https://monkeylmj.github.io/post/handler">
                   <h3 class="post-title">
                     Android的消息机制-Handler
                   </h3>

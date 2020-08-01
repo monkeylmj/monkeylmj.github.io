@@ -2,18 +2,18 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://monkeylmj.github.io/</id>
     <title>猴子公园</title>
-    <updated>2019-07-10T14:23:24.631Z</updated>
+    <updated>2020-08-01T10:04:01.802Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://monkeylmj.github.io/"/>
-    <link rel="self" href="https://monkeylmj.github.io//atom.xml"/>
+    <link rel="self" href="https://monkeylmj.github.io/atom.xml"/>
     <subtitle>坚持比完美更重要</subtitle>
-    <logo>https://monkeylmj.github.io//images/avatar.png</logo>
-    <icon>https://monkeylmj.github.io//favicon.ico</icon>
-    <rights>All rights reserved 2019, 猴子公园</rights>
+    <logo>https://monkeylmj.github.io/images/avatar.png</logo>
+    <icon>https://monkeylmj.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2020, 猴子公园</rights>
     <entry>
         <title type="html"><![CDATA[ 路由框架 ARouter源码分析]]></title>
-        <id>https://monkeylmj.github.io//post/lu-you-kuang-jia-arouter-yuan-ma-fen-xi</id>
-        <link href="https://monkeylmj.github.io//post/lu-you-kuang-jia-arouter-yuan-ma-fen-xi">
+        <id>https://monkeylmj.github.io/post/lu-you-kuang-jia-arouter-yuan-ma-fen-xi</id>
+        <link href="https://monkeylmj.github.io/post/lu-you-kuang-jia-arouter-yuan-ma-fen-xi">
         </link>
         <updated>2019-07-10T14:11:25.000Z</updated>
         <summary type="html"><![CDATA[<blockquote>
@@ -46,7 +46,7 @@
 </ul>
 <p>其中arouter-compiler主要是通过arouter-annotation提供的注解自动生成相关代码，代码最终生成路径在：</p>
 <p>/build/generated/source/apt/debug/com/alibaba/android/arouter/routes路径下。</p>
-<p><img src="https://i.loli.net/2019/07/10/5d2569995325d36210.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/07/10/5d2569995325d36210.png" alt="" loading="lazy"></figure>
 <ol start="2">
 <li>应用中初始化</li>
 </ol>
@@ -395,8 +395,8 @@ public class ARouter$$Group$$activity implements IRouteGroup {
     </entry>
     <entry>
         <title type="html"><![CDATA[Java设计模式总结]]></title>
-        <id>https://monkeylmj.github.io//post/java-pattern-design</id>
-        <link href="https://monkeylmj.github.io//post/java-pattern-design">
+        <id>https://monkeylmj.github.io/post/java-pattern-design</id>
+        <link href="https://monkeylmj.github.io/post/java-pattern-design">
         </link>
         <updated>2019-07-06T14:12:37.000Z</updated>
         <summary type="html"><![CDATA[<p>最近又看了一遍刘伟的Java设计模式，这次决定写一篇读后感，趁热将学到的东西和自己的理解总结下来，加深一下印象，也方便自己以后回顾。</p>
@@ -440,49 +440,49 @@ public class ARouter$$Group$$activity implements IRouteGroup {
 <p><strong>23种Java设计模式或多或少都满足了上面的一些设计原则，来保证可维护性和扩展性，其中开闭原则是一个理想设计模式的终极目标。</strong></p>
 <h2 id="6个创建型模式">6个创建型模式</h2>
 <h3 id="简单工厂模式">简单工厂模式</h3>
-<p><img src="https://i.loli.net/2019/07/06/5d2001fde236457872.png" alt="factory_simple"></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/07/06/5d2001fde236457872.png" alt="factory_simple" loading="lazy"></figure>
 <p>通过工厂来封装产品创建的细节，项目中使用频率较高，使用简单。缺点是：不满足开闭原则，增加新的产品类，需要改动工厂类。</p>
 <h3 id="工厂方法模式">工厂方法模式</h3>
-<p><img src="https://i.loli.net/2019/07/06/5d20051c91b8464907.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2019/07/06/5d20051c91b8464907.png" alt="" loading="lazy"></figure>
 <p>工厂方法模式解决了简单工厂不满足开闭原则的问题，将工厂抽象出了一个<em>Factory</em>接口，每个实现的工厂只生产一个具体的产品。 当需要增加一种产品时，只需要增加一个产品类和一个工厂类，不需要改动现有代码，满足开闭原则。</p>
 <p>缺点：当有大量的产品时，如果一个产品对应一个工厂，将会有大量的工厂类。</p>
 <p>案例：Java中的一些集合类实现了Iterable工厂接口来生产Iterator产品。</p>
 <h3 id="抽象工厂模式">抽象工厂模式</h3>
-<p><img src="https://i.loli.net/2019/07/06/5d20aff65b10a92874.png" alt=""></p>
+<figure data-type="image" tabindex="3"><img src="https://i.loli.net/2019/07/06/5d20aff65b10a92874.png" alt="" loading="lazy"></figure>
 <p>抽象工厂模式一定程度上弥补了工厂方法模式的不足（大量工厂类），一个工厂类可以生产一个产品族的所有产品。当增加一个产品族的时候，增加所有产品和工厂类，满足开闭原则；当增加某个产品时，需要修改工厂类，不满足开闭原则，称之为开闭原则的倾斜性。</p>
 <h3 id="单例模式">单例模式</h3>
-<p><img src="https://i.loli.net/2019/07/06/5d20b4079e5e820804.png" alt=""></p>
+<figure data-type="image" tabindex="4"><img src="https://i.loli.net/2019/07/06/5d20b4079e5e820804.png" alt="" loading="lazy"></figure>
 <p>单例模式非常简单，实现方式有饿汉模式、懒汉模式（线程安全）、Holder</p>
 <h3 id="原型模式">原型模式</h3>
-<p><img src="https://i.loli.net/2019/07/06/5d20b61698cfd64499.png" alt=""></p>
+<figure data-type="image" tabindex="5"><img src="https://i.loli.net/2019/07/06/5d20b61698cfd64499.png" alt="" loading="lazy"></figure>
 <p>原型模式就是克隆，当一个对象的创建非常复杂时，可以快速创建对象的副本。在Java中就是实现一个Cloneable接口，然后复写clone方法。需要注意浅拷贝和深拷贝的问题。</p>
 <h3 id="建造者模式">建造者模式</h3>
-<p><img src="https://i.loli.net/2019/07/06/5d20bb2ed5aa547635.png" alt=""></p>
+<figure data-type="image" tabindex="6"><img src="https://i.loli.net/2019/07/06/5d20bb2ed5aa547635.png" alt="" loading="lazy"></figure>
 <p>使用频率非常高的一种设计模式。如果要创建的对象有很多参数，并且其中某些参数还是可选的，用构造函数来创建的话就需要提供好多个重载来满足不同的配置，甚至还要记住这些参数的顺序。这种情况就可以使用建造者模式进行优化，通过配置参数的方式一步一步组装完成一个对象。</p>
 <p>案例：OKHttp、Dialog等很多开源项目都采用了建造者方式来创建复杂对象。</p>
 <h2 id="7个结构型模式">7个结构型模式</h2>
 <h3 id="适配器模式">适配器模式</h3>
-<p><img src="https://i.loli.net/2019/07/07/5d219c09e879034370.png" alt=""></p>
+<figure data-type="image" tabindex="7"><img src="https://i.loli.net/2019/07/07/5d219c09e879034370.png" alt="" loading="lazy"></figure>
 <p>当新旧接口不一致时，使用适配器模式适配旧接口为新的接口。</p>
 <p>案例：Android中的Adapter，适配各种各样的数据，提供ViewHolder。</p>
 <h3 id="桥接模式">桥接模式</h3>
-<p><img src="https://i.loli.net/2019/07/07/5d219f138cd8188895.png" alt=""></p>
+<figure data-type="image" tabindex="8"><img src="https://i.loli.net/2019/07/07/5d219f138cd8188895.png" alt="" loading="lazy"></figure>
 <p>当一个业务有多个不同的维度变化时，使用继承会产生大量的类并且不满足开闭原则，使用组合对两个维度进行抽象层的桥接，可以方便以后的扩展，增加任何一个维度的实现都只需要增加一个类，不需要对现有逻辑做修改。</p>
 <p>案例：</p>
 <p>Android源码的ListView和GridView那块，AdapterView是一个维度，Adapter是另一个维度，通过AdapterView#setAdatper()进行桥接，最终结果是ListView、GridView可以和任意的Adapter进行两两组合。</p>
 <h3 id="组合模式">组合模式</h3>
-<p><img src="https://i.loli.net/2019/07/09/5d24a48e0526e72509.png" alt=""></p>
+<figure data-type="image" tabindex="9"><img src="https://i.loli.net/2019/07/09/5d24a48e0526e72509.png" alt="" loading="lazy"></figure>
 <p>组合模式的目的就是：对于一个树型结构，能够采用一种一致的方式来处理叶子节点和容器节点。 如UML所示，叶子节点和容器节点都实现了Component接口，我们可以一致地调用operation接口进行处理，而不用care他是叶子还是容器。对于容器节点，多了一些管理叶子节点的方法，在构造树的时候使用。</p>
 <p>案例：Android中的View树就是采用组合模式，绘制的时候只需要调用measure方法，不用管当前是View还是ViewGroup。</p>
 <h3 id="装饰者模式">装饰者模式</h3>
-<p><img src="https://i.loli.net/2019/07/07/5d21a59e65e8c61056.png" alt=""></p>
+<figure data-type="image" tabindex="10"><img src="https://i.loli.net/2019/07/07/5d21a59e65e8c61056.png" alt="" loading="lazy"></figure>
 <p>装饰者模式的作用是通过装饰者为目标增强功能。装饰者和被装饰者实现同个接口。</p>
 <p>案例：Java的InputStream、OutStream用到了装饰者。</p>
 <h3 id="外观模式">外观模式</h3>
-<p><img src="https://i.loli.net/2019/07/09/5d24a4bde8bf220423.png" alt=""></p>
+<figure data-type="image" tabindex="11"><img src="https://i.loli.net/2019/07/09/5d24a4bde8bf220423.png" alt="" loading="lazy"></figure>
 <p>当业务中有多个子系统时，可以定义一个外观类提供更高层的接口，内部调用各个子系统的功能，实现客户端和各个子系统的解耦。典型的迪米特法则，一个实体尽可能与更少的实体发生关系。</p>
 <h3 id="享元模式">享元模式</h3>
-<p><img src="https://i.loli.net/2019/07/07/5d21ac4eb6f1889023.png" alt=""></p>
+<figure data-type="image" tabindex="12"><img src="https://i.loli.net/2019/07/07/5d21ac4eb6f1889023.png" alt="" loading="lazy"></figure>
 <p>书中使用棋盘中的黑子和白子来举例享元模式，对应的UML图如上图所以，根据案例来理解享元模式比较简单。</p>
 <p>享元模式是为了优化内存占用的问题，当一个系统中有大量重复对象的时候(黑子、白子)，我们通过享元模式来共享内存最终达到减少内存占用的目的。</p>
 <p>使用享元模式要区分对象的内部状态和外部状态。内部状态就是保持不变，可以共享的一部分，在案例中就是颜色这个属性，所有的白子都可以共享白色这个内部状态。外部状态就是会随着环境进行变化的部分，在案例中就是棋子坐标，所有的白子都有各自的坐标。使用享元模式时，对于内部状态我们可以共享内存，对于外部状态，我们需要提供方法来接受外部状态对象（Coordinate），实现共享对象的不同显示。</p>
@@ -492,52 +492,52 @@ public class ARouter$$Group$$activity implements IRouteGroup {
 <p><em>享元池：</em></p>
 <p>享元池是为了解决大量重复相似对象的使用导致的内存占用过大问题，享元池中的对象各不相同，业务场景上在同一时间某个对象被共享使用。</p>
 <h3 id="代理模式">代理模式</h3>
-<p><img src="https://i.loli.net/2019/07/07/5d21aeb48fdc291241.png" alt=""></p>
+<figure data-type="image" tabindex="13"><img src="https://i.loli.net/2019/07/07/5d21aeb48fdc291241.png" alt="" loading="lazy"></figure>
 <p>代理模式从UML图上看跟装饰者模式很相似：都是实现同个接口，代理类代理目标类，装饰者装饰被装饰者，好像是同个东西换了个名字？其实不然，总结了下两者不同的地方：</p>
 <p>1、应用场景上，代理模式是为了帮助目标类增强一些自己不关心的事，比如日志代理，在目标类前后加一些日志。而装饰模式则是用来增强自身的功能，比如Java的InputStream那些的子类装饰类，提供了一些更方便的接口给我们调用。</p>
 <p>2、使用方式上，代理模式一般在代理类中确定了要被代理的目标对象，客户端根本不知道被代理类的存在。而装饰模式中被装饰者对象需要客户端创建提供，并且可以层层嵌套，层层装饰</p>
 <h2 id="11个行为性模式">11个行为性模式</h2>
 <h3 id="职责链模式">职责链模式</h3>
-<p><img src="https://i.loli.net/2019/07/08/5d228a282551048801.png" alt=""></p>
+<figure data-type="image" tabindex="14"><img src="https://i.loli.net/2019/07/08/5d228a282551048801.png" alt="" loading="lazy"></figure>
 <p>将请求发送者和处理者解耦，发送者不需要关心到底谁处理了事件，只需要将请求发送到链上。</p>
 <p>案例：OKHttp框架 https://monkeylmj.github.io/post/okhttp/</p>
 <h3 id="命令模式">命令模式</h3>
-<p><img src="https://i.loli.net/2019/07/08/5d228c766bee637332.png" alt=""></p>
+<figure data-type="image" tabindex="15"><img src="https://i.loli.net/2019/07/08/5d228c766bee637332.png" alt="" loading="lazy"></figure>
 <p>通过命令对象将请求的发送者和处理者进行解耦，发送者只需要发出一个命令，不需要关心谁处理了这个请求（具体的Command知道谁处理了），类似于开关与灯泡的关系，一个开关并不关心自己控制哪个灯泡的亮灭，通过电线（命令）来决定。</p>
 <h3 id="解释器模式">解释器模式</h3>
-<p><img src="https://i.loli.net/2019/07/08/5d229202ca46646307.png" alt=""></p>
+<figure data-type="image" tabindex="16"><img src="https://i.loli.net/2019/07/08/5d229202ca46646307.png" alt="" loading="lazy"></figure>
 <p>解释器模式的应用场景是解释语言文法，将其抽象成一棵语法树然后解释执行。</p>
 <p>从UML图来看跟组合模式基本是一个东西，两者都是操作树型结构。这里我也分不清两者的区别，可能只是应用场景上的不同，解释器用来解释语句？？</p>
 <h3 id="迭代者模式">迭代者模式</h3>
-<p><img src="https://i.loli.net/2019/07/08/5d229839ae3ca30068.png" alt=""></p>
+<figure data-type="image" tabindex="17"><img src="https://i.loli.net/2019/07/08/5d229839ae3ca30068.png" alt="" loading="lazy"></figure>
 <p>对集合对象的遍历逻辑如果放在集合对象中，会造成集合对象职责过重，并且更换遍历方式时必须修改现有代码，不符合开闭原则。所以可以将遍历部分的逻辑抽离到迭代器中单独变化。</p>
 <p>UML图中是工厂方法模式和迭代器模式的结合使用。使用迭代器模式之后，可以在满足开闭原则的前提下为集合对象更换迭代方式。</p>
 <h3 id="中介者模式">中介者模式</h3>
-<p><img src="https://i.loli.net/2019/07/08/5d2331a6a801649049.png" alt=""></p>
+<figure data-type="image" tabindex="18"><img src="https://i.loli.net/2019/07/08/5d2331a6a801649049.png" alt="" loading="lazy"></figure>
 <p>对于多个对象之间的复杂交互，采用传统的方案有几个缺点：</p>
 <p>1、系统结构复杂，耦合度高。每个组件都与其他组件相互关联和调用，系统呈网状结构。</p>
 <p>2、组件的可重用性差。因为一个组件与其他组件有很强的关联，导致其没有其他组件的支持很难被重用。</p>
 <p>3、可扩展性差。因为组件之间的复杂关系，导致增加一个组件，需要修改系统中大量的地方，不满足开闭原则</p>
 <p>根据迪米特法则，一个类应该尽可能少地与其他类产生关系，通常的做法就是增加一层封装。在这里，增加的这一层就是中介者。中介者关联了所有的组件，任何一个组件都只需要与中介者发生关系，通过中介者与其他组件进行关联调用，整个系统结构呈星状。</p>
 <h3 id="备忘录模式">备忘录模式</h3>
-<p><img src="https://i.loli.net/2019/07/08/5d23360b2c9aa32383.png" alt=""></p>
+<figure data-type="image" tabindex="19"><img src="https://i.loli.net/2019/07/08/5d23360b2c9aa32383.png" alt="" loading="lazy"></figure>
 <p>备忘录模式非常简单，当需要记录一个对象在某个时刻的状态，以后进行恢复的时候可以选择备忘录模式。</p>
 <p>案例：Android的onSaveInstanceState和onRestoreInstanceState实现就是备忘录模式，在Activity异常关闭时记录下必要的状态，下次打开时进行恢复。</p>
 <h3 id="观察者模式">观察者模式</h3>
-<p><img src="https://i.loli.net/2019/07/08/5d2339040110c22115.png" alt=""></p>
+<figure data-type="image" tabindex="20"><img src="https://i.loli.net/2019/07/08/5d2339040110c22115.png" alt="" loading="lazy"></figure>
 <p>使用频率最高的一种设计模式，各种Callback。</p>
 <h3 id="状态者模式">状态者模式</h3>
-<p><img src="https://i.loli.net/2019/07/08/5d233a5a755c077928.png" alt=""></p>
+<figure data-type="image" tabindex="21"><img src="https://i.loli.net/2019/07/08/5d233a5a755c077928.png" alt="" loading="lazy"></figure>
 <p>状态模式适用于存在多个状态的系统。如果使用传统的方案（不分状态类），则需要在一个类中使用变量来控制各个状态，然后会有大量的if else判断和状态切换的代码，增加状态或者修改都十分麻烦，不满足开闭原则。</p>
 <p>增加状态类之后，可以将某个状态的行为都封装在一起，满足了单一职责原则。环境类Context中关联当前的状态，只负责将请求发到当前状态上，而不需要关心当前状态是什么。如果增加一个状态，也只需要增加一个类，并且处理好状态之间的转换关系即可，满足开闭原则。</p>
 <h3 id="策略模式">策略模式</h3>
-<p><img src="https://i.loli.net/2019/07/09/5d23d97749aa530115.png" alt=""></p>
+<figure data-type="image" tabindex="22"><img src="https://i.loli.net/2019/07/09/5d23d97749aa530115.png" alt="" loading="lazy"></figure>
 <p>比较简单，当需要切换不同策略时，可以使用策略模式，抽象一个接口出来。</p>
 <h3 id="模板方法模式">模板方法模式</h3>
-<p><img src="https://i.loli.net/2019/07/09/5d23da41a29f322354.png" alt=""></p>
+<figure data-type="image" tabindex="23"><img src="https://i.loli.net/2019/07/09/5d23da41a29f322354.png" alt="" loading="lazy"></figure>
 <p>当一个操作是一个框架，有一个固定的执行流程，其中某些流程是共同的，某些是有差异的，就可以使用模板方法模式，将框架和共同的步骤封装在父类中，不同的步骤用抽象方法代替，由子类来实现具体的操作。</p>
 <h3 id="访问者模式">访问者模式</h3>
-<p><img src="https://i.loli.net/2019/07/09/5d23dd4bb203e93652.png" alt=""></p>
+<figure data-type="image" tabindex="24"><img src="https://i.loli.net/2019/07/09/5d23dd4bb203e93652.png" alt="" loading="lazy"></figure>
 <p>如果对于一个复杂对象有很多种访问处理方式，可以使用访问者模式将访问对象的行为封装到单独访问类中，满足单一职责。增加新的访问操作，只需要再添加一个具体访问类即可，满足开闭原则。增加元素类型，需要修改抽象访问类添加对象的访问方法，不满足开闭原则。</p>
 <p>至此，23种设计模式已经过了一遍，个人认为他们之间有很多的共性，有些设计模式的UML图几乎是一模一样的，但是他们在应用的场景上有差异，只有在实践中多用才能慢慢掌握这些设计原则，做到&quot;手中无模式，心中有模式&quot;</p>
 <p>23种设计模式的UML图: <a href="https://www.processon.com/view/link/5d1fff5de4b0d16653f67a39">https://www.processon.com/view/link/5d1fff5de4b0d16653f67a39</a></p>
@@ -545,8 +545,8 @@ public class ARouter$$Group$$activity implements IRouteGroup {
     </entry>
     <entry>
         <title type="html"><![CDATA[Android性能优化 - 内存优化]]></title>
-        <id>https://monkeylmj.github.io//post/android-performance-memory</id>
-        <link href="https://monkeylmj.github.io//post/android-performance-memory">
+        <id>https://monkeylmj.github.io/post/android-performance-memory</id>
+        <link href="https://monkeylmj.github.io/post/android-performance-memory">
         </link>
         <updated>2019-03-08T07:34:26.000Z</updated>
         <summary type="html"><![CDATA[<p>在内存方面我们通常会遇到几个问题：内存空间占用过大、内存泄露、内存溢出、内存抖动等。</p>
@@ -564,14 +564,14 @@ public class ARouter$$Group$$activity implements IRouteGroup {
 </ul>
 <h3 id="11-oom是什么">1.1 OOM是什么?</h3>
 <p>Android中定义了一个进程的内存上限，超过之后便会OOM崩溃。</p>
-<p>上限值可通过系统属性查看：
-<img src="https://i.loli.net/2019/03/08/5c821d02c5790.png" alt=""></p>
+<p>上限值可通过系统属性查看：<br>
+<img src="https://i.loli.net/2019/03/08/5c821d02c5790.png" alt="" loading="lazy"></p>
 <p>第一个属性为一个标准应用能申请的最大内存。</p>
 <p>第二个属性为应用添加<strong>largeHeap=true</strong>之后能够申请的最大内存。</p>
 <h3 id="12-lowmemorykiller机制">1.2 LowMemoryKiller机制</h3>
 <p>当系统空间不足时，会按照进程的优先级对进程进行回收来腾出更多的空间给有需要的进程使用。</p>
 <p>Android中进程按优先级大概分为几个类型，优先级从高到底依次为：</p>
-<p><img src="https://i.loli.net/2019/03/08/5c821da6d4587.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/03/08/5c821da6d4587.png" alt="" loading="lazy"></figure>
 <p><strong>前台进程</strong>：正在与用户交互，Activity、Service、 BroadcastReceiver正在交互，前台Service等</p>
 <p><strong>可见进程</strong>：onPause状态的Activity 或 进程持有的Service与前台或者可见Activity绑定</p>
 <p><strong>服务进程</strong>：进程运行着一个不可见的Service，比如后台播放音乐等</p>
@@ -609,8 +609,8 @@ public class ARouter$$Group$$activity implements IRouteGroup {
 <p>4、JobScheduler（5.0+）</p>
 <p>...</p>
 <h2 id="2-常见的内存问题">2. 常见的内存问题</h2>
-<p>###2.1 GC机制
-<img src="https://i.loli.net/2019/03/08/5c821e6d2bf4c.png" alt=""></p>
+<p>###2.1 GC机制<br>
+<img src="https://i.loli.net/2019/03/08/5c821e6d2bf4c.png" alt="" loading="lazy"></p>
 <p>JVM中从GC Roots对象开始遍历进行可达性分析，对于不可达的对象在GC时被标记回收。</p>
 <p>在Java语言里，可作为GC Roots对象的包括如下几种：</p>
 <p>a.虚拟机栈(栈桢中的本地变量表)中的引用的对象</p>
@@ -634,8 +634,8 @@ public class ARouter$$Group$$activity implements IRouteGroup {
 </li>
 <li>
 <p>资源使用后未释放</p>
-<p>IO、Cursor等资源使用后要及时关闭，释放缓冲对象、
-广播注册，取消注册成对出现、
+<p>IO、Cursor等资源使用后要及时关闭，释放缓冲对象、<br>
+广播注册，取消注册成对出现、<br>
 WebView用完之后destory</p>
 </li>
 <li>
@@ -671,12 +671,12 @@ WebView用完之后destory</p>
 <ul>
 <li>
 <p>一些数据结构的优化</p>
-<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap、
+<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap、<br>
 使用注解代替枚举类型等</p>
 </li>
 <li>
 <p>不好的代码</p>
-<p>使用ListView没有复用convertView、
+<p>使用ListView没有复用convertView、<br>
 提前实例化用不到的对象</p>
 </li>
 </ul>
@@ -713,11 +713,11 @@ WebView用完之后destory</p>
 }
 </code></pre>
 <p>当应用中有内存泄露问题时，会有如下界面，进行引用的分析：</p>
-<p><img src="https://i.loli.net/2019/03/08/5c822278b7645.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2019/03/08/5c822278b7645.png" alt="" loading="lazy"></figure>
 <p><strong>LeakCanary是怎么来检测内存泄露的呢？</strong></p>
 <p>十分简单，两步：</p>
 <p>1、监听Activity的onDestroy</p>
-<p><img src="https://i.loli.net/2019/03/08/5c8222f314c14.png" alt=""></p>
+<figure data-type="image" tabindex="3"><img src="https://i.loli.net/2019/03/08/5c8222f314c14.png" alt="" loading="lazy"></figure>
 <p>Application提供了callback可以监听应用中任何一个Activity的生命周期变化，这里在Activity destroy时对Activity进行watch。</p>
 <p>2、利用弱引用+引用队列检测对象是否被回收。</p>
 <blockquote>
@@ -726,18 +726,18 @@ WebView用完之后destory</p>
 <p>2、弱引用创建时可以传入一个引用队列，如果对象被回收，则这个弱引用会被放入引用队列中。</p>
 <p>由此，检测一个对象是否被回收就通过弱引用来引用，然后触发GC，最后检测引用队列中是否存在这个引用即可。</p>
 </blockquote>
-<p><img src="https://i.loli.net/2019/03/08/5c8223a9954e1.png" alt=""></p>
+<figure data-type="image" tabindex="4"><img src="https://i.loli.net/2019/03/08/5c8223a9954e1.png" alt="" loading="lazy"></figure>
 <p>上面这种简单的使用只能检测出Activity对象的泄露，如果要检测其他对象的泄露，可以代码中主动watch想要检测的对象，这里不细说。</p>
 <h3 id="32-android-profiler工具">3.2 Android Profiler工具</h3>
 <p>AS中Run -&gt; Profile，可以查看CPU、内存、网络等信息。</p>
-<p><img src="https://i.loli.net/2019/03/08/5c8224d439e36.png" alt=""></p>
+<figure data-type="image" tabindex="5"><img src="https://i.loli.net/2019/03/08/5c8224d439e36.png" alt="" loading="lazy"></figure>
 <p>检查内存泄露的方式为：</p>
 <p>1、反复多几次进入、退出怀疑的界面</p>
 <p>2、最后退出怀疑的界面之后，手动触发一下GC</p>
 <p>3、dump现在内存信息（上图），进行分析。</p>
 <p>Android Profiler工具已经可以提供比较详细的信息，比如引用信息等，个人感觉已经可以替代老牌内存分析工具MAT了。这里不详细介绍工具的用法，大家可以实际去操作一遍就比较容易理解。</p>
 <h3 id="33-mat工具">3.3 MAT工具</h3>
-<p><img src="https://i.loli.net/2019/03/08/5c8225f67dd5d.png" alt=""></p>
+<figure data-type="image" tabindex="6"><img src="https://i.loli.net/2019/03/08/5c8225f67dd5d.png" alt="" loading="lazy"></figure>
 <p>Android Profiler工具可以将内存信息导出为hprof文件，然后必须利用platform-tools中提供的工具转换成MAT能够识别的hprof文件，然后打开进行分析：</p>
 <pre><code class="language-shell">hprof-conv leak.hprof leak-mat.hprof
 </code></pre>
@@ -750,8 +750,8 @@ WebView用完之后destory</p>
     </entry>
     <entry>
         <title type="html"><![CDATA[OkHttp源码解析]]></title>
-        <id>https://monkeylmj.github.io//post/okhttp</id>
-        <link href="https://monkeylmj.github.io//post/okhttp">
+        <id>https://monkeylmj.github.io/post/okhttp</id>
+        <link href="https://monkeylmj.github.io/post/okhttp">
         </link>
         <updated>2019-03-03T14:18:27.000Z</updated>
         <summary type="html"><![CDATA[<p>简要总结一下OKHttp框架的整体流程，结合其中用到的设计模式进行说明。</p>
@@ -911,7 +911,7 @@ public Call newCall(Request request) {
 </code></pre>
 <p>处理的逻辑很简单：取出index所在的拦截器，执行intercept方法进行拦截，传入的参数为新构造的职责链（index+1，指向了下一个拦截器）。</p>
 <p>UML图如下：</p>
-<p><img src="https://i.loli.net/2019/02/23/5c70cba2935de.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/02/23/5c70cba2935de.png" alt="" loading="lazy"></figure>
 <p>最后，写一个简单的自定义拦截器，看下大概的流程：</p>
 <pre><code class="language-java">public class TestInterceptor implements Interceptor {
     @Override
@@ -930,7 +930,7 @@ public Call newCall(Request request) {
 </code></pre>
 <p>到此，OKHttp的网络请求流程已经完整！</p>
 <h2 id="总结">总结</h2>
-<p><img src="https://i.loli.net/2019/02/23/5c70be03dc3e8.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2019/02/23/5c70be03dc3e8.png" alt="" loading="lazy"></figure>
 <p>OKHttp网络请求框架的实现很优雅，各个类的职责明确，整个流程跟把大象装在冰箱里一样简单：</p>
 <p>1、组装Request</p>
 <p>2、Client发送Request（经过各个拦截器的处理）</p>
@@ -939,8 +939,8 @@ public Call newCall(Request request) {
     </entry>
     <entry>
         <title type="html"><![CDATA[Android性能优化 - UI优化]]></title>
-        <id>https://monkeylmj.github.io//post/android-performance-ui</id>
-        <link href="https://monkeylmj.github.io//post/android-performance-ui">
+        <id>https://monkeylmj.github.io/post/android-performance-ui</id>
+        <link href="https://monkeylmj.github.io/post/android-performance-ui">
         </link>
         <updated>2019-03-02T07:17:38.000Z</updated>
         <summary type="html"><![CDATA[<p>系统地总结一下Android性能优化关于UI优化方面的知识点。</p>
@@ -955,11 +955,11 @@ public Call newCall(Request request) {
 <p><strong>我们都知道要为了UI的顺畅需要保证一次的渲染在16ms之内，这是为什么呢？</strong></p>
 <p>Android手机的屏幕刷新率一般是60HZ，也就是1s刷新60次，每16ms刷新一次把图像显示在屏幕上。这就要求我们的UI绘制一定要在16ms内完成，否则就会看到两帧同样的画面，也就是掉帧。</p>
 <p>我们经常看到如下图，也就是UI正常渲染的情况：</p>
-<p><img src="https://i.loli.net/2018/12/10/5c0e5096be3dc.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2018/12/10/5c0e5096be3dc.png" alt="" loading="lazy"></figure>
 <p>最初看到这张图的时候就有一个疑问，屏幕每16ms刷新一次，但是触发绘制的时间点是不确定的呀。如果恰巧在一帧的结尾触发了绘制（比如调用了invalidate），这时屏幕取出的数据肯定是上一帧的，不也会掉帧吗？</p>
 <p>要弄清这个疑问就需要对Android的绘制流程进行一个梳理：</p>
 <p>在Android 4.1之后引进了VSYNC和双重缓冲的技术大大增加了UI的流畅度，实际上渲染的流程可以用下图更精确地表示。</p>
-<p><img src="https://i.loli.net/2018/12/10/5c0e50ae5a657.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2018/12/10/5c0e50ae5a657.png" alt="" loading="lazy"></figure>
 <p>如上图，屏幕每隔16ms都会发出一个VSYNC信号，app层接收到垂直同步信号之后CPU开始计算数据（measure、layout、draw）、GPU渲染图像。等到下一个VSYNC信号到来时，将上次渲染的图像显示出来，再继续进行下一次的渲染。从图上看来，每次的绘制都是精确地在VSYNC信号到来时，并不会出现刚刚说的在一帧的结尾进行绘制。</p>
 <p><strong>那么Android源码中是怎么实现垂直同步信号控制App层的绘制的呢？</strong></p>
 <p>首先从一个能触发UI绘制的方法入手 View#invalidate</p>
@@ -1112,8 +1112,8 @@ private void dispatchVsync(long timestampNanos, int builtInDisplayId, int frame)
 </code></pre>
 <p>至此，从CallbackQueue中将之前添加的CALLBACK_TRAVERSAL类型的任务取出、执行，进入绘制流程。</p>
 <p><strong>总结一下：</strong></p>
-<p>1、应用中调用刷新时，将遍历View树的操作封装在Runnable里，然后放到Choreographer队列中，并且通知底层安排下一帧的VSYNC信号。
-2、每隔16ms屏幕的VSYNC信号到来时，从队列中取出Runnable执行，绘制、渲染View树。
+<p>1、应用中调用刷新时，将遍历View树的操作封装在Runnable里，然后放到Choreographer队列中，并且通知底层安排下一帧的VSYNC信号。<br>
+2、每隔16ms屏幕的VSYNC信号到来时，从队列中取出Runnable执行，绘制、渲染View树。<br>
 3、一帧的时间内调用多次绘制方法，只有第一次生效，会添加一个绘制任务到队列中（因为有mTraversalScheduled变量的控制。其他的绘制也没必要，绘制时会遍历整棵View树）。</p>
 <h2 id="卡顿原因">卡顿原因</h2>
 <p>基于对上面UI渲染流程的梳理，可以找到造成一帧绘制时间超过16ms的点：</p>
@@ -1155,10 +1155,10 @@ doCallbacks(Choreographer.CALLBACK_TRAVERSAL, frameTimeNanos);
 <h2 id="卡顿检测">卡顿检测</h2>
 <h3 id="1-gpu渲染模式分析">1. GPU渲染模式分析</h3>
 <p>直观地看出哪里出了问题</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a30a378175.png" alt=""></p>
+<figure data-type="image" tabindex="3"><img src="https://i.loli.net/2019/03/02/5c7a30a378175.png" alt="" loading="lazy"></figure>
 <p>每个色块的含义如下：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a30bc36040.png" alt=""></p>
-<p><img src="https://i.loli.net/2018/11/14/5bebd6e9bc1b0.png" alt=""></p>
+<figure data-type="image" tabindex="4"><img src="https://i.loli.net/2019/03/02/5c7a30bc36040.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="https://i.loli.net/2018/11/14/5bebd6e9bc1b0.png" alt="" loading="lazy"></figure>
 <p>Misc: 主线程在执行耗时操作导致VSync到来时不能及时执行绘制渲染</p>
 <p>Input:  事件回调耗时太多（比如move-&gt; scroll 触发RecyclerView滚动时inflate）</p>
 <p>Anim:  动画回调耗时太多（比如fling动画触发RecyclerView滚动时inflate）</p>
@@ -1179,16 +1179,16 @@ python systrace [view,gfx,sched] -o [output.html]
 open [output.html] #查看trace文件
 ```
 </code></pre>
-<p><img src="https://i.loli.net/2018/11/20/5bf3a6c5366a5.png" alt=""></p>
+<figure data-type="image" tabindex="6"><img src="https://i.loli.net/2018/11/20/5bf3a6c5366a5.png" alt="" loading="lazy"></figure>
 <p>一些关键点：</p>
 <p>右侧的Alert提示卡顿出现的点和原因。</p>
 <p>中间红色的F代表出现卡顿的帧，可以查看在哪一步消耗了多长时间。</p>
 <p>右上角？查看操作快捷键</p>
 <h3 id="3-android-cpu-profiler">3. Android  CPU Profiler</h3>
 <p>记录详细的调用栈，进一步统计方法的时间消耗，定位问题代码的位置。</p>
-<p><img src="https://i.loli.net/2018/12/12/5c10c042a8d33.png" alt=""></p>
+<figure data-type="image" tabindex="7"><img src="https://i.loli.net/2018/12/12/5c10c042a8d33.png" alt="" loading="lazy"></figure>
 <h3 id="4-gpu过度绘制分析">4. GPU过度绘制分析</h3>
-<p><img src="https://i.loli.net/2018/12/13/5c11f2bd7b458.png" alt=""></p>
+<figure data-type="image" tabindex="8"><img src="https://i.loli.net/2018/12/13/5c11f2bd7b458.png" alt="" loading="lazy"></figure>
 <ul>
 <li><strong>真彩色：</strong> 没有过度绘制</li>
 <li><strong>蓝色：</strong> 过度绘制 1 次</li>
@@ -1231,17 +1231,17 @@ Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() 
 ```
 </code></pre>
 <h3 id="6lint工具">6.Lint工具</h3>
-<p><img src="https://developer.android.com/topic/performance/images/lint-display.png" alt="img"></p>
+<figure data-type="image" tabindex="9"><img src="https://developer.android.com/topic/performance/images/lint-display.png" alt="img" loading="lazy"></figure>
 <h2 id="最佳实践">最佳实践</h2>
 <h3 id="cpu绘制阶段优化measurelayoutdraw阶段">CPU绘制阶段优化（measure/layout/draw阶段)</h3>
 <p>主要是减少布局的层级</p>
 <p>1、RelativeLayout还是LinearLayout？</p>
 <p>RelativeLayout或者LinearLayout使用weight会测量两次</p>
 <p>如果RelativeLayout嵌套RelativeLayout会导致子View测量更多次</p>
-<p><img src="https://i.loli.net/2018/12/12/5c10c0d1657b8.png" alt=""></p>
-<p>建议：
-a、使用RelativeLayout来减少View层级，使View树扁平化。
-b、如果层级相同，优先使用LinearLayout
+<figure data-type="image" tabindex="10"><img src="https://i.loli.net/2018/12/12/5c10c0d1657b8.png" alt="" loading="lazy"></figure>
+<p>建议：<br>
+a、使用RelativeLayout来减少View层级，使View树扁平化。<br>
+b、如果层级相同，优先使用LinearLayout<br>
 c、考虑使用ContraintLayout</p>
 <p>2、减少无用的嵌套布局</p>
 <pre><code>```xml
@@ -1294,7 +1294,7 @@ canvas.drawPath(mCirclePath, mPaint);
 ```
 </code></pre>
 <p>2、 Bitmap uploads</p>
-<p><img src="https://i.loli.net/2018/12/12/5c10c12241e96.png" alt=""></p>
+<figure data-type="image" tabindex="11"><img src="https://i.loli.net/2018/12/12/5c10c12241e96.png" alt="" loading="lazy"></figure>
 <p>bitmap在同步上传到GPU的过程中消耗时间，主线程是阻塞的，可以根据控件大小优化bitmap大小等。</p>
 <p>3、减少过度绘制</p>
 <ul>
@@ -1302,7 +1302,7 @@ canvas.drawPath(mCirclePath, mPaint);
 <li>优化布局的层级，不要有过多的View堆叠</li>
 <li>自定义View使用clipRect减少过度绘制，比如</li>
 </ul>
-<p><img src="https://i.loli.net/2018/12/12/5c10c1481b722.png" alt=""></p>
+<figure data-type="image" tabindex="12"><img src="https://i.loli.net/2018/12/12/5c10c1481b722.png" alt="" loading="lazy"></figure>
 <ul>
 <li>
 <p>减少透明度的使用，使用alpha会导致先绘制正常的像素，再进行混合：</p>
@@ -1320,15 +1320,15 @@ canvas.drawPath(mCirclePath, mPaint);
     </entry>
     <entry>
         <title type="html"><![CDATA[路径动画的实现方案]]></title>
-        <id>https://monkeylmj.github.io//post/path-tracing</id>
-        <link href="https://monkeylmj.github.io//post/path-tracing">
+        <id>https://monkeylmj.github.io/post/path-tracing</id>
+        <link href="https://monkeylmj.github.io/post/path-tracing">
         </link>
         <updated>2018-04-08T12:10:38.000Z</updated>
         <summary type="html"><![CDATA[<p>总结一下工作中遇到的一个“UI路径动画”的实现。效果如下图（对号的动画）</p>
 ]]></summary>
         <content type="html"><![CDATA[<p>总结一下工作中遇到的一个“UI路径动画”的实现。效果如下图（对号的动画）</p>
 <!-- more -->
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1g0o7yykaxcg30a00a0tei.gif" alt="path tracing"></p>
+<figure data-type="image" tabindex="1"><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1g0o7yykaxcg30a00a0tei.gif" alt="path tracing" loading="lazy"></figure>
 <h2 id="基本分析">基本分析</h2>
 <p>我们都知道，使用Android的Path Api可以很容易地画出一个对号（或者任意其他的不规则图形），实现这个效果的难点在于怎么以动画的形式逐渐地把这个路径给绘制出来。这里把路径(Path)从0到1绘制出来的过程称之为路径追踪（Path Tracing).</p>
 <p>[@Path的绘制API]</p>
@@ -1442,27 +1442,27 @@ dst.lineTo(终点);
 <ul>
 <li>CornerPathEffect</li>
 </ul>
-<p><img src="https://i.loli.net/2019/03/02/5c79ecb89dd62.jpg" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2019/03/02/5c79ecb89dd62.jpg" alt="" loading="lazy"></figure>
 <ul>
 <li>DecretePathEffect  随机偏移的乱七八糟的效果</li>
 </ul>
-<p><img src="https://i.loli.net/2019/03/02/5c79ece126611.jpg" alt=""></p>
+<figure data-type="image" tabindex="3"><img src="https://i.loli.net/2019/03/02/5c79ece126611.jpg" alt="" loading="lazy"></figure>
 <ul>
 <li>DashPathEffect</li>
 </ul>
-<p><img src="https://i.loli.net/2019/03/02/5c79ececdb632.jpg" alt=""></p>
+<figure data-type="image" tabindex="4"><img src="https://i.loli.net/2019/03/02/5c79ececdb632.jpg" alt="" loading="lazy"></figure>
 <ul>
 <li>PathDashPathEffect  用某个Path来绘制虚线</li>
 </ul>
-<p><img src="https://i.loli.net/2019/03/02/5c79ecf8ec9e2.jpg" alt=""></p>
+<figure data-type="image" tabindex="5"><img src="https://i.loli.net/2019/03/02/5c79ecf8ec9e2.jpg" alt="" loading="lazy"></figure>
 <ul>
 <li>SumPathEffect  组合两种Effect，分别按照两种PathEffect对路径进行绘制</li>
 </ul>
-<p><img src="https://i.loli.net/2019/03/02/5c79ed02256d4.jpg" alt=""></p>
+<figure data-type="image" tabindex="6"><img src="https://i.loli.net/2019/03/02/5c79ed02256d4.jpg" alt="" loading="lazy"></figure>
 <ul>
 <li>
 <p>ComposePathEffect 组合两种Effect，先对目标路径应用第一个Effect，对改变后的Path再应用第二个Effect</p>
-<p><img src="https://i.loli.net/2019/03/02/5c79ed0b3da1b.jpg" alt=""></p>
+<figure data-type="image" tabindex="7"><img src="https://i.loli.net/2019/03/02/5c79ed0b3da1b.jpg" alt="" loading="lazy"></figure>
 </li>
 </ul>
 <p>那这些PathEffect跟要实现的路径追踪有半毛钱关系吗？？？</p>
@@ -1514,8 +1514,8 @@ DashPathEffect dashPathEffect = new DashPathEffect(new float[]{pathLength, pathL
     </entry>
     <entry>
         <title type="html"><![CDATA[Andorid启动流程探索]]></title>
-        <id>https://monkeylmj.github.io//post/android-boot</id>
-        <link href="https://monkeylmj.github.io//post/android-boot">
+        <id>https://monkeylmj.github.io/post/android-boot</id>
+        <link href="https://monkeylmj.github.io/post/android-boot">
         </link>
         <updated>2018-03-24T01:48:26.000Z</updated>
         <summary type="html"><![CDATA[<p>最近在了解OTA升级方面的东西，学习的过程中，对Android的启动流程产生了很大的兴趣，很好奇为什么调用了<strong>RecoverySystem#installPackage</strong>方法之后手机重启就自动进入升级界面开始升级？Android整个系统的启动流程到底是怎样的。加上之前对bootloader、recovery等概念比较模糊,于是打算把这些东西梳理一下。</p>
@@ -1642,7 +1642,7 @@ DashPathEffect dashPathEffect = new DashPathEffect(new float[]{pathLength, pathL
 <p>从注释中找到答案，Recovery服务通过/cache来和主系统交互（注释第一行）。执行RecoverySystem#installPackage(path)之后会将path路径写入*/cache/recovery/command*中(命令大概是这样:--update_package=[path])，然后Recovery服务读取到update package的命令之后就进行升级。 除了升级命令之外，常用的还有wipe data、wipe cache等命令，都是类似地将命令写入command文件中与Recovery服务交互。Android的设置中的恢复出厂设置其实就是写了一个wipe data命令到 command文件中，让Recovery服务启动时去重置数据。</p>
 <p>另外，Recovery服务在读取到 <em>/cache/recovery/command</em>中的命令之后，还会将此命令写入到BCB控制块的recovery字段，主要是用来防止在升级等过程中突然断电，再次重启之后仍然能够进入Recovery，继续之前的升级功能。在升级等操作完成之后会清空BCB和/cache/recovery/command，避免下次重启之后仍然进入Recovery， 这些都是一些细节问题。</p>
 <p>Recovery服务的具体流程可以看下面这张图：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c79ee0e42f07.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/03/02/5c79ee0e42f07.png" alt="" loading="lazy"></figure>
 <p><strong>总结</strong></p>
 <p>1、Recovery服务通过/cache来和主系统交互，Andorid系统一般是将命令写入/cache/recovery/command中来和Recovery服务进行交互。</p>
 <p>2、Recovery服务能够做的功能有：工厂重置、OTA升级、安全文件系统的启用/禁用。</p>
@@ -1676,8 +1676,8 @@ fastboot reboot
     </entry>
     <entry>
         <title type="html"><![CDATA[Android之Theme、Style、Attr]]></title>
-        <id>https://monkeylmj.github.io//post/android-theme-style-attr</id>
-        <link href="https://monkeylmj.github.io//post/android-theme-style-attr">
+        <id>https://monkeylmj.github.io/post/android-theme-style-attr</id>
+        <link href="https://monkeylmj.github.io/post/android-theme-style-attr">
         </link>
         <updated>2017-11-09T11:15:01.000Z</updated>
         <summary type="html"><![CDATA[<p>Android UI开发中经常会涉及到Theme、Style、Attr等概念，熟悉掌握这些概念能够帮助我们快速实现想要的UI效果，另外自定义View也经常需要使用到这些东西。</p>
@@ -1919,8 +1919,8 @@ public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr,
     </entry>
     <entry>
         <title type="html"><![CDATA[Android按键事件分发机制]]></title>
-        <id>https://monkeylmj.github.io//post/keyevent-dispatch</id>
-        <link href="https://monkeylmj.github.io//post/keyevent-dispatch">
+        <id>https://monkeylmj.github.io/post/keyevent-dispatch</id>
+        <link href="https://monkeylmj.github.io/post/keyevent-dispatch">
         </link>
         <updated>2017-10-22T22:51:09.000Z</updated>
         <summary type="html"><![CDATA[<p>本文总结一下Android中按键事件的分发机制。按键事件分发跟触摸事件分发类似，比触摸事件分发更加简单。</p>
@@ -1942,7 +1942,7 @@ public TextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr,
 </code></pre>
 <p>那么最开始的<code>dispatchTouchEvent</code>是哪里调用的，事件的根源是从哪里传上来的？</p>
 <p>下图展示了Framework中事件的根源：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a18db47dba.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/03/02/5c7a18db47dba.png" alt="" loading="lazy"></figure>
 <p>其中&quot;一系列的InputStage&quot;用到了责任链模式对事件依次进行处理。</p>
 <p>InputStage责任链的创建在ViewRootImpl中：</p>
 <p>[@ViewRootImpl#setView]</p>
@@ -2599,8 +2599,8 @@ public boolean dispatchKeyEvent(KeyEvent event) {
     </entry>
     <entry>
         <title type="html"><![CDATA[Android NFC开发入门]]></title>
-        <id>https://monkeylmj.github.io//post/androidnfc</id>
-        <link href="https://monkeylmj.github.io//post/androidnfc">
+        <id>https://monkeylmj.github.io/post/androidnfc</id>
+        <link href="https://monkeylmj.github.io/post/androidnfc">
         </link>
         <updated>2017-02-28T05:08:50.000Z</updated>
         <summary type="html"><![CDATA[<p>总结一下Android中NFC开发相关的知识点。</p>
@@ -2654,7 +2654,7 @@ public boolean dispatchKeyEvent(KeyEvent event) {
 <li>如果仍然没有Activity响应上述两个Action，则系统会发送优先级最低的<code>ACTION_TAG_DISCOVERED</code>的Intent。</li>
 </ol>
 <p>图为标签分发系统：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a184962704.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/03/02/5c7a184962704.png" alt="" loading="lazy"></figure>
 <h3 id="nfc数据格式">NFC数据格式</h3>
 <p>NFC的数据格式可以分为NDEF和非NDEF两种。<strong>NDEF</strong>是NFC Forum定义的一种标准格式，在Android中得到最大范围的支持，是Android最推荐使用的格式。</p>
 <ul>
@@ -2662,7 +2662,7 @@ public boolean dispatchKeyEvent(KeyEvent event) {
 <p><strong>NDEF数据</strong>在AndroidSDK中被封装成一个包含多个<strong>NdefRecord</strong>的<strong>NdefMessage</strong>，<strong>android.nfc.tech.Ndef</strong>类封装了各种便捷的读写数据的操作。</p>
 <p>前面说过当Android设备发现NDEF格式的标签之后会发出<code>ACTION_NDEF_DISCOVERED</code>类型的Intent。通常在intent中还会带上更加具体的mime type &amp; URI等数据，以便筛选更加具体的Activity来进行处理（这个是Android推荐使用这个格式的原因之一）。下面就来说说，NDEF具体的数据格式以及Android如何分析NDEF数据来生成对应的Intent。</p>
 <p><strong>NDEF数据格式</strong>：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a185c4e7fc.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2019/03/02/5c7a185c4e7fc.png" alt="" loading="lazy"></figure>
 <ol>
 <li><strong>TNF</strong> 3bits的字段，标识了如何解析第二个字段type。包含的值见表一：</li>
 </ol>
@@ -3052,9 +3052,9 @@ protected void onNewIntent(Intent intent) {
 </code></pre>
 <h2 id="card-emulation-mode">Card emulation mode</h2>
 <p>Android4.4之前通过在Android设备中内置一个芯片来实现。通信路径如下图：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a1893b60b8.png" alt=""></p>
+<figure data-type="image" tabindex="3"><img src="https://i.loli.net/2019/03/02/5c7a1893b60b8.png" alt="" loading="lazy"></figure>
 <p>Android4.4之后可以通过纯软件模拟NFC卡。通信路径如下图：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a189e94ec6.png" alt=""></p>
+<figure data-type="image" tabindex="4"><img src="https://i.loli.net/2019/03/02/5c7a189e94ec6.png" alt="" loading="lazy"></figure>
 <p>在Android上层程序只需实现一个服务，并且给服务绑定一个ID，便可以模拟成NFC卡，根据读卡器发出的ID响应数据。</p>
 <pre><code class="language-java">public class MyHostApduService extends HostApduService {
     @Override
@@ -3088,8 +3088,8 @@ protected void onNewIntent(Intent intent) {
 </code></pre>
 <hr>
 <h2 id="相关资料">相关资料</h2>
-<p>1.NDEF数据解析实例：<a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">http</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note#</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">/</a></p>
-<p>2.AndnroidNFC官网介绍：<a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">https</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">://</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">developer.android.com/guide/topics/connectivity/nfc/index.html</a></p>
+<p>1.NDEF数据解析实例：<a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">http</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">😕/note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note#</a><a href="http://note.youdao.com/share/?id=8b45d342e34d2bce0fade2218bafd79c&amp;type=note">/</a></p>
+<p>2.AndnroidNFC官网介绍：<a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">https</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">😕/</a><a href="https://developer.android.com/guide/topics/connectivity/nfc/index.html">developer.android.com/guide/topics/connectivity/nfc/index.html</a></p>
 <p>3.NFC相关的应用：NXPTagWriter、NXPTagInfo、MIFARE经典工具</p>
 ]]></content>
     </entry>

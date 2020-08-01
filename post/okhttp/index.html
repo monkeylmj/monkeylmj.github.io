@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1562768596978">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1596276237496">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
@@ -36,7 +36,7 @@
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://monkeylmj.github.io/">
-        <img src="https://monkeylmj.github.io//images/avatar.png?v=1562768596978" class="site-logo">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1596276237496" class="site-logo">
         <h1 class="site-title">猴子公园</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -257,7 +257,7 @@ public Call newCall(Request request) {
 </code></pre>
 <p>处理的逻辑很简单：取出index所在的拦截器，执行intercept方法进行拦截，传入的参数为新构造的职责链（index+1，指向了下一个拦截器）。</p>
 <p>UML图如下：</p>
-<p><img src="https://i.loli.net/2019/02/23/5c70cba2935de.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/02/23/5c70cba2935de.png" alt="" loading="lazy"></figure>
 <p>最后，写一个简单的自定义拦截器，看下大概的流程：</p>
 <pre><code class="language-java">public class TestInterceptor implements Interceptor {
     @Override
@@ -276,7 +276,7 @@ public Call newCall(Request request) {
 </code></pre>
 <p>到此，OKHttp的网络请求流程已经完整！</p>
 <h2 id="总结">总结</h2>
-<p><img src="https://i.loli.net/2019/02/23/5c70be03dc3e8.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2019/02/23/5c70be03dc3e8.png" alt="" loading="lazy"></figure>
 <p>OKHttp网络请求框架的实现很优雅，各个类的职责明确，整个流程跟把大象装在冰箱里一样简单：</p>
 <p>1、组装Request</p>
 <p>2、Client发送Request（经过各个拦截器的处理）</p>
@@ -286,11 +286,11 @@ public Call newCall(Request request) {
             
               <div class="tag-container">
                 
-                  <a href="https://monkeylmj.github.io//tag/yuan-ma-jie-xi" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/yuan-ma-jie-xi" class="tag">
                     源码解析
                   </a>
                 
-                  <a href="https://monkeylmj.github.io//tag/wang-luo" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/wang-luo" class="tag">
                     网络
                   </a>
                 
@@ -299,7 +299,7 @@ public Call newCall(Request request) {
             
               <div class="next-post">
                 <div class="next">下一篇</div>
-                <a href="https://monkeylmj.github.io//post/android-performance-ui">
+                <a href="https://monkeylmj.github.io/post/android-performance-ui">
                   <h3 class="post-title">
                     Android性能优化 - UI优化
                   </h3>

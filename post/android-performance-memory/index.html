@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1562768596978">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1596276237496">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
@@ -36,7 +36,7 @@
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://monkeylmj.github.io/">
-        <img src="https://monkeylmj.github.io//images/avatar.png?v=1562768596978" class="site-logo">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1596276237496" class="site-logo">
         <h1 class="site-title">猴子公园</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -115,14 +115,14 @@
 </ul>
 <h3 id="11-oom是什么">1.1 OOM是什么?</h3>
 <p>Android中定义了一个进程的内存上限，超过之后便会OOM崩溃。</p>
-<p>上限值可通过系统属性查看：
-<img src="https://i.loli.net/2019/03/08/5c821d02c5790.png" alt=""></p>
+<p>上限值可通过系统属性查看：<br>
+<img src="https://i.loli.net/2019/03/08/5c821d02c5790.png" alt="" loading="lazy"></p>
 <p>第一个属性为一个标准应用能申请的最大内存。</p>
 <p>第二个属性为应用添加<strong>largeHeap=true</strong>之后能够申请的最大内存。</p>
 <h3 id="12-lowmemorykiller机制">1.2 LowMemoryKiller机制</h3>
 <p>当系统空间不足时，会按照进程的优先级对进程进行回收来腾出更多的空间给有需要的进程使用。</p>
 <p>Android中进程按优先级大概分为几个类型，优先级从高到底依次为：</p>
-<p><img src="https://i.loli.net/2019/03/08/5c821da6d4587.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2019/03/08/5c821da6d4587.png" alt="" loading="lazy"></figure>
 <p><strong>前台进程</strong>：正在与用户交互，Activity、Service、 BroadcastReceiver正在交互，前台Service等</p>
 <p><strong>可见进程</strong>：onPause状态的Activity 或 进程持有的Service与前台或者可见Activity绑定</p>
 <p><strong>服务进程</strong>：进程运行着一个不可见的Service，比如后台播放音乐等</p>
@@ -160,8 +160,8 @@
 <p>4、JobScheduler（5.0+）</p>
 <p>...</p>
 <h2 id="2-常见的内存问题">2. 常见的内存问题</h2>
-<p>###2.1 GC机制
-<img src="https://i.loli.net/2019/03/08/5c821e6d2bf4c.png" alt=""></p>
+<p>###2.1 GC机制<br>
+<img src="https://i.loli.net/2019/03/08/5c821e6d2bf4c.png" alt="" loading="lazy"></p>
 <p>JVM中从GC Roots对象开始遍历进行可达性分析，对于不可达的对象在GC时被标记回收。</p>
 <p>在Java语言里，可作为GC Roots对象的包括如下几种：</p>
 <p>a.虚拟机栈(栈桢中的本地变量表)中的引用的对象</p>
@@ -185,8 +185,8 @@
 </li>
 <li>
 <p>资源使用后未释放</p>
-<p>IO、Cursor等资源使用后要及时关闭，释放缓冲对象、
-广播注册，取消注册成对出现、
+<p>IO、Cursor等资源使用后要及时关闭，释放缓冲对象、<br>
+广播注册，取消注册成对出现、<br>
 WebView用完之后destory</p>
 </li>
 <li>
@@ -222,12 +222,12 @@ WebView用完之后destory</p>
 <ul>
 <li>
 <p>一些数据结构的优化</p>
-<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap、
+<p>ArrayMap、SparseArray等Android提供的数据接口来替代HashMap、<br>
 使用注解代替枚举类型等</p>
 </li>
 <li>
 <p>不好的代码</p>
-<p>使用ListView没有复用convertView、
+<p>使用ListView没有复用convertView、<br>
 提前实例化用不到的对象</p>
 </li>
 </ul>
@@ -264,11 +264,11 @@ WebView用完之后destory</p>
 }
 </code></pre>
 <p>当应用中有内存泄露问题时，会有如下界面，进行引用的分析：</p>
-<p><img src="https://i.loli.net/2019/03/08/5c822278b7645.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2019/03/08/5c822278b7645.png" alt="" loading="lazy"></figure>
 <p><strong>LeakCanary是怎么来检测内存泄露的呢？</strong></p>
 <p>十分简单，两步：</p>
 <p>1、监听Activity的onDestroy</p>
-<p><img src="https://i.loli.net/2019/03/08/5c8222f314c14.png" alt=""></p>
+<figure data-type="image" tabindex="3"><img src="https://i.loli.net/2019/03/08/5c8222f314c14.png" alt="" loading="lazy"></figure>
 <p>Application提供了callback可以监听应用中任何一个Activity的生命周期变化，这里在Activity destroy时对Activity进行watch。</p>
 <p>2、利用弱引用+引用队列检测对象是否被回收。</p>
 <blockquote>
@@ -277,18 +277,18 @@ WebView用完之后destory</p>
 <p>2、弱引用创建时可以传入一个引用队列，如果对象被回收，则这个弱引用会被放入引用队列中。</p>
 <p>由此，检测一个对象是否被回收就通过弱引用来引用，然后触发GC，最后检测引用队列中是否存在这个引用即可。</p>
 </blockquote>
-<p><img src="https://i.loli.net/2019/03/08/5c8223a9954e1.png" alt=""></p>
+<figure data-type="image" tabindex="4"><img src="https://i.loli.net/2019/03/08/5c8223a9954e1.png" alt="" loading="lazy"></figure>
 <p>上面这种简单的使用只能检测出Activity对象的泄露，如果要检测其他对象的泄露，可以代码中主动watch想要检测的对象，这里不细说。</p>
 <h3 id="32-android-profiler工具">3.2 Android Profiler工具</h3>
 <p>AS中Run -&gt; Profile，可以查看CPU、内存、网络等信息。</p>
-<p><img src="https://i.loli.net/2019/03/08/5c8224d439e36.png" alt=""></p>
+<figure data-type="image" tabindex="5"><img src="https://i.loli.net/2019/03/08/5c8224d439e36.png" alt="" loading="lazy"></figure>
 <p>检查内存泄露的方式为：</p>
 <p>1、反复多几次进入、退出怀疑的界面</p>
 <p>2、最后退出怀疑的界面之后，手动触发一下GC</p>
 <p>3、dump现在内存信息（上图），进行分析。</p>
 <p>Android Profiler工具已经可以提供比较详细的信息，比如引用信息等，个人感觉已经可以替代老牌内存分析工具MAT了。这里不详细介绍工具的用法，大家可以实际去操作一遍就比较容易理解。</p>
 <h3 id="33-mat工具">3.3 MAT工具</h3>
-<p><img src="https://i.loli.net/2019/03/08/5c8225f67dd5d.png" alt=""></p>
+<figure data-type="image" tabindex="6"><img src="https://i.loli.net/2019/03/08/5c8225f67dd5d.png" alt="" loading="lazy"></figure>
 <p>Android Profiler工具可以将内存信息导出为hprof文件，然后必须利用platform-tools中提供的工具转换成MAT能够识别的hprof文件，然后打开进行分析：</p>
 <pre><code class="language-shell">hprof-conv leak.hprof leak-mat.hprof
 </code></pre>
@@ -302,11 +302,11 @@ WebView用完之后destory</p>
             
               <div class="tag-container">
                 
-                  <a href="https://monkeylmj.github.io//tag/xing-neng-you-hua" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/xing-neng-you-hua" class="tag">
                     性能优化
                   </a>
                 
-                  <a href="https://monkeylmj.github.io//tag/nei-cun-you-hua" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/nei-cun-you-hua" class="tag">
                     内存优化
                   </a>
                 
@@ -315,7 +315,7 @@ WebView用完之后destory</p>
             
               <div class="next-post">
                 <div class="next">下一篇</div>
-                <a href="https://monkeylmj.github.io//post/okhttp">
+                <a href="https://monkeylmj.github.io/post/okhttp">
                   <h3 class="post-title">
                     OkHttp源码解析
                   </h3>

@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1562768596978">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1596276237496">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
@@ -36,7 +36,7 @@
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://monkeylmj.github.io/">
-        <img src="https://monkeylmj.github.io//images/avatar.png?v=1562768596978" class="site-logo">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1596276237496" class="site-logo">
         <h1 class="site-title">猴子公园</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -118,7 +118,7 @@
 <p>那么，Android为什么那么蛋疼地要求一定要在UI线程中进行UI操作呢？</p>
 <p>这是因为Android的UI操作是非线程安全的，如果多个线程并发操作UI，可能会导致UI出于某种不可控的状态（可以理解为Google程序员解决不了多线程并发的问题 0-0，如果加上锁的机制来控制并发问题又会导致代码设计、效率问题），所以Android便采用了单线程模型,只能在主线程中操作UI.</p>
 <h2 id="handler消息机制模型">Handler消息机制模型</h2>
-<p><img src="https://i.loli.net/2018/08/05/5b65d1cc0d057.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2018/08/05/5b65d1cc0d057.png" alt="" loading="lazy"></figure>
 <p>上图是Handler能够进行线程切换的模型图，在Thread#1中发出的Message添加到Thread#2中对应的消息队列中，然后Thread#2中的Looper不断循环取出Message，在Thread#2中调用相关逻辑，完成两个线程间的切换。</p>
 <p>图中包含了我们需要关心的所有对象，Handler、Looper、MessageQueue。</p>
 <p><strong>Handler</strong></p>
@@ -305,7 +305,7 @@ public static Looper myLooper() {
             
               <div class="tag-container">
                 
-                  <a href="https://monkeylmj.github.io//tag/android-yuan-ma-jie-xi" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/android-yuan-ma-jie-xi" class="tag">
                     Android源码解析
                   </a>
                 
@@ -314,7 +314,7 @@ public static Looper myLooper() {
             
               <div class="next-post">
                 <div class="next">下一篇</div>
-                <a href="https://monkeylmj.github.io//post/tread-pool">
+                <a href="https://monkeylmj.github.io/post/tread-pool">
                   <h3 class="post-title">
                     线程池的使用总结
                   </h3>

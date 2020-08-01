@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1562768596978">
+<link rel="shortcut icon" href="https://monkeylmj.github.io//favicon.ico?v=1596276237496">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://monkeylmj.github.io//styles/main.css">
 
@@ -36,7 +36,7 @@
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://monkeylmj.github.io/">
-        <img src="https://monkeylmj.github.io//images/avatar.png?v=1562768596978" class="site-logo">
+        <img src="https://monkeylmj.github.io//images/avatar.png?v=1596276237496" class="site-logo">
         <h1 class="site-title">猴子公园</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -112,11 +112,11 @@
 <p><strong>我们都知道要为了UI的顺畅需要保证一次的渲染在16ms之内，这是为什么呢？</strong></p>
 <p>Android手机的屏幕刷新率一般是60HZ，也就是1s刷新60次，每16ms刷新一次把图像显示在屏幕上。这就要求我们的UI绘制一定要在16ms内完成，否则就会看到两帧同样的画面，也就是掉帧。</p>
 <p>我们经常看到如下图，也就是UI正常渲染的情况：</p>
-<p><img src="https://i.loli.net/2018/12/10/5c0e5096be3dc.png" alt=""></p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2018/12/10/5c0e5096be3dc.png" alt="" loading="lazy"></figure>
 <p>最初看到这张图的时候就有一个疑问，屏幕每16ms刷新一次，但是触发绘制的时间点是不确定的呀。如果恰巧在一帧的结尾触发了绘制（比如调用了invalidate），这时屏幕取出的数据肯定是上一帧的，不也会掉帧吗？</p>
 <p>要弄清这个疑问就需要对Android的绘制流程进行一个梳理：</p>
 <p>在Android 4.1之后引进了VSYNC和双重缓冲的技术大大增加了UI的流畅度，实际上渲染的流程可以用下图更精确地表示。</p>
-<p><img src="https://i.loli.net/2018/12/10/5c0e50ae5a657.png" alt=""></p>
+<figure data-type="image" tabindex="2"><img src="https://i.loli.net/2018/12/10/5c0e50ae5a657.png" alt="" loading="lazy"></figure>
 <p>如上图，屏幕每隔16ms都会发出一个VSYNC信号，app层接收到垂直同步信号之后CPU开始计算数据（measure、layout、draw）、GPU渲染图像。等到下一个VSYNC信号到来时，将上次渲染的图像显示出来，再继续进行下一次的渲染。从图上看来，每次的绘制都是精确地在VSYNC信号到来时，并不会出现刚刚说的在一帧的结尾进行绘制。</p>
 <p><strong>那么Android源码中是怎么实现垂直同步信号控制App层的绘制的呢？</strong></p>
 <p>首先从一个能触发UI绘制的方法入手 View#invalidate</p>
@@ -269,8 +269,8 @@ private void dispatchVsync(long timestampNanos, int builtInDisplayId, int frame)
 </code></pre>
 <p>至此，从CallbackQueue中将之前添加的CALLBACK_TRAVERSAL类型的任务取出、执行，进入绘制流程。</p>
 <p><strong>总结一下：</strong></p>
-<p>1、应用中调用刷新时，将遍历View树的操作封装在Runnable里，然后放到Choreographer队列中，并且通知底层安排下一帧的VSYNC信号。
-2、每隔16ms屏幕的VSYNC信号到来时，从队列中取出Runnable执行，绘制、渲染View树。
+<p>1、应用中调用刷新时，将遍历View树的操作封装在Runnable里，然后放到Choreographer队列中，并且通知底层安排下一帧的VSYNC信号。<br>
+2、每隔16ms屏幕的VSYNC信号到来时，从队列中取出Runnable执行，绘制、渲染View树。<br>
 3、一帧的时间内调用多次绘制方法，只有第一次生效，会添加一个绘制任务到队列中（因为有mTraversalScheduled变量的控制。其他的绘制也没必要，绘制时会遍历整棵View树）。</p>
 <h2 id="卡顿原因">卡顿原因</h2>
 <p>基于对上面UI渲染流程的梳理，可以找到造成一帧绘制时间超过16ms的点：</p>
@@ -312,10 +312,10 @@ doCallbacks(Choreographer.CALLBACK_TRAVERSAL, frameTimeNanos);
 <h2 id="卡顿检测">卡顿检测</h2>
 <h3 id="1-gpu渲染模式分析">1. GPU渲染模式分析</h3>
 <p>直观地看出哪里出了问题</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a30a378175.png" alt=""></p>
+<figure data-type="image" tabindex="3"><img src="https://i.loli.net/2019/03/02/5c7a30a378175.png" alt="" loading="lazy"></figure>
 <p>每个色块的含义如下：</p>
-<p><img src="https://i.loli.net/2019/03/02/5c7a30bc36040.png" alt=""></p>
-<p><img src="https://i.loli.net/2018/11/14/5bebd6e9bc1b0.png" alt=""></p>
+<figure data-type="image" tabindex="4"><img src="https://i.loli.net/2019/03/02/5c7a30bc36040.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="https://i.loli.net/2018/11/14/5bebd6e9bc1b0.png" alt="" loading="lazy"></figure>
 <p>Misc: 主线程在执行耗时操作导致VSync到来时不能及时执行绘制渲染</p>
 <p>Input:  事件回调耗时太多（比如move-&gt; scroll 触发RecyclerView滚动时inflate）</p>
 <p>Anim:  动画回调耗时太多（比如fling动画触发RecyclerView滚动时inflate）</p>
@@ -336,16 +336,16 @@ python systrace [view,gfx,sched] -o [output.html]
 open [output.html] #查看trace文件
 ```
 </code></pre>
-<p><img src="https://i.loli.net/2018/11/20/5bf3a6c5366a5.png" alt=""></p>
+<figure data-type="image" tabindex="6"><img src="https://i.loli.net/2018/11/20/5bf3a6c5366a5.png" alt="" loading="lazy"></figure>
 <p>一些关键点：</p>
 <p>右侧的Alert提示卡顿出现的点和原因。</p>
 <p>中间红色的F代表出现卡顿的帧，可以查看在哪一步消耗了多长时间。</p>
 <p>右上角？查看操作快捷键</p>
 <h3 id="3-android-cpu-profiler">3. Android  CPU Profiler</h3>
 <p>记录详细的调用栈，进一步统计方法的时间消耗，定位问题代码的位置。</p>
-<p><img src="https://i.loli.net/2018/12/12/5c10c042a8d33.png" alt=""></p>
+<figure data-type="image" tabindex="7"><img src="https://i.loli.net/2018/12/12/5c10c042a8d33.png" alt="" loading="lazy"></figure>
 <h3 id="4-gpu过度绘制分析">4. GPU过度绘制分析</h3>
-<p><img src="https://i.loli.net/2018/12/13/5c11f2bd7b458.png" alt=""></p>
+<figure data-type="image" tabindex="8"><img src="https://i.loli.net/2018/12/13/5c11f2bd7b458.png" alt="" loading="lazy"></figure>
 <ul>
 <li><strong>真彩色：</strong> 没有过度绘制</li>
 <li><strong>蓝色：</strong> 过度绘制 1 次</li>
@@ -388,17 +388,17 @@ Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() 
 ```
 </code></pre>
 <h3 id="6lint工具">6.Lint工具</h3>
-<p><img src="https://developer.android.com/topic/performance/images/lint-display.png" alt="img"></p>
+<figure data-type="image" tabindex="9"><img src="https://developer.android.com/topic/performance/images/lint-display.png" alt="img" loading="lazy"></figure>
 <h2 id="最佳实践">最佳实践</h2>
 <h3 id="cpu绘制阶段优化measurelayoutdraw阶段">CPU绘制阶段优化（measure/layout/draw阶段)</h3>
 <p>主要是减少布局的层级</p>
 <p>1、RelativeLayout还是LinearLayout？</p>
 <p>RelativeLayout或者LinearLayout使用weight会测量两次</p>
 <p>如果RelativeLayout嵌套RelativeLayout会导致子View测量更多次</p>
-<p><img src="https://i.loli.net/2018/12/12/5c10c0d1657b8.png" alt=""></p>
-<p>建议：
-a、使用RelativeLayout来减少View层级，使View树扁平化。
-b、如果层级相同，优先使用LinearLayout
+<figure data-type="image" tabindex="10"><img src="https://i.loli.net/2018/12/12/5c10c0d1657b8.png" alt="" loading="lazy"></figure>
+<p>建议：<br>
+a、使用RelativeLayout来减少View层级，使View树扁平化。<br>
+b、如果层级相同，优先使用LinearLayout<br>
 c、考虑使用ContraintLayout</p>
 <p>2、减少无用的嵌套布局</p>
 <pre><code>```xml
@@ -451,7 +451,7 @@ canvas.drawPath(mCirclePath, mPaint);
 ```
 </code></pre>
 <p>2、 Bitmap uploads</p>
-<p><img src="https://i.loli.net/2018/12/12/5c10c12241e96.png" alt=""></p>
+<figure data-type="image" tabindex="11"><img src="https://i.loli.net/2018/12/12/5c10c12241e96.png" alt="" loading="lazy"></figure>
 <p>bitmap在同步上传到GPU的过程中消耗时间，主线程是阻塞的，可以根据控件大小优化bitmap大小等。</p>
 <p>3、减少过度绘制</p>
 <ul>
@@ -459,7 +459,7 @@ canvas.drawPath(mCirclePath, mPaint);
 <li>优化布局的层级，不要有过多的View堆叠</li>
 <li>自定义View使用clipRect减少过度绘制，比如</li>
 </ul>
-<p><img src="https://i.loli.net/2018/12/12/5c10c1481b722.png" alt=""></p>
+<figure data-type="image" tabindex="12"><img src="https://i.loli.net/2018/12/12/5c10c1481b722.png" alt="" loading="lazy"></figure>
 <ul>
 <li>
 <p>减少透明度的使用，使用alpha会导致先绘制正常的像素，再进行混合：</p>
@@ -478,11 +478,11 @@ canvas.drawPath(mCirclePath, mPaint);
             
               <div class="tag-container">
                 
-                  <a href="https://monkeylmj.github.io//tag/xing-neng-you-hua" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/xing-neng-you-hua" class="tag">
                     性能优化
                   </a>
                 
-                  <a href="https://monkeylmj.github.io//tag/ui-you-hua" class="tag">
+                  <a href="https://monkeylmj.github.io/tag/ui-you-hua" class="tag">
                     UI优化
                   </a>
                 
@@ -491,7 +491,7 @@ canvas.drawPath(mCirclePath, mPaint);
             
               <div class="next-post">
                 <div class="next">下一篇</div>
-                <a href="https://monkeylmj.github.io//post/path-tracing">
+                <a href="https://monkeylmj.github.io/post/path-tracing">
                   <h3 class="post-title">
                     路径动画的实现方案
                   </h3>
